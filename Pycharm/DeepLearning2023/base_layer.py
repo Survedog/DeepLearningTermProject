@@ -4,7 +4,7 @@ from abc import *
 class LayerBase(metaclass=ABCMeta):
 
     def __init__(self):
-        self.param = []
+        self.params = []
         self.grads = []
         pass
 

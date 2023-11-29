@@ -43,7 +43,6 @@ def create_context_and_target(corpus):
 
 
 def get_one_hot_encoding(num, array_size):
-    assert(num < array_size)
     encoded = np.zeros(array_size)
     encoded[num] = 1
     return encoded
