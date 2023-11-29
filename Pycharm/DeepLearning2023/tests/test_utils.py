@@ -17,10 +17,15 @@ class UtilsTests(unittest.TestCase):
                                                  1 / (1 + np.exp(-2))])))
 
     def test_create_corpus_and_dict(self):
-        corpus, id_to_word, word_to_id = create_corpus_and_dict("안녕하세요. 저는 프로그래머입니다. 만나서 반갑습니다.")
-        print(corpus)
-        print(id_to_word)
-        print(word_to_id)
+        text = "안녕하세요. 저는 프로그래머입니다. 만나서 반갑습니다."
+        corpus, id_to_word, word_to_id = create_corpus_and_dict(text)
+
+        parsed_text = text_parser.morphs(text)
+
+        for idx, word_id in enumerate(corpus):
+            word = parsed_text[idx]
+            self.assertEqual(word, id_to_word[word_id])
+            self.assertEqual(word_id, word_to_id[word])
 
     def test_create_context_and_target(self):
         corpus = [1, 2, 1, 3, 2, 4]
