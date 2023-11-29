@@ -4,8 +4,8 @@ from abc import *
 class LayerBase(metaclass=ABCMeta):
 
     def __init__(self):
-        self.param = None
-        self.grads = None
+        self.param = []
+        self.grads = []
         pass
 
     @abstractmethod
