@@ -1,11 +1,6 @@
 import unittest
 from utils import *
 
-if Config.USE_GPU:
-    import cupy as np
-else:
-    import numpy as np
-
 
 class UtilsTests(unittest.TestCase):
 
