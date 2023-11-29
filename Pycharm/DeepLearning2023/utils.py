@@ -19,7 +19,7 @@ def create_corpus_and_dict(text):
     id_to_word = {}
     word_to_id = {}
 
-    id_count = 1
+    id_count = 0
     for word in parsed_text:
         if word not in word_to_id:
             id_to_word[id_count] = word
