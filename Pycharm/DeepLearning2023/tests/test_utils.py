@@ -27,3 +27,19 @@ class UtilsTests(unittest.TestCase):
         context, target = create_context_and_target(corpus)
         self.assertListEqual(context, [(1, 1), (2, 3), (1, 2), (3, 4)])
         self.assertListEqual(target, [2, 1, 3, 2])
+
+    def test_get_one_hot_encoding(self):
+        encoded = get_one_hot_encoding(2, 5)
+        answer = np.array([0, 0, 1, 0, 0])
+        self.assertTrue(np.array_equal(encoded, answer))
+
+        encoded = get_one_hot_encoding(0, 100)
+        answer = np.zeros(100)
+        answer[0] = 1
+        self.assertTrue(np.array_equal(encoded, answer))
+
+        encoded = get_one_hot_encoding(99, 100)
+        answer = np.zeros(100)
+        answer[99] = 1
+        self.assertTrue(np.array_equal(encoded, answer))
+
