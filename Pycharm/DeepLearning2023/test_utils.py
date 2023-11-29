@@ -21,3 +21,9 @@ class UtilsTests(unittest.TestCase):
         print(corpus)
         print(id_to_word)
         print(word_to_id)
+
+    def test_create_context_and_target(self):
+        corpus = [1, 2, 1, 3, 2, 4]
+        context, target = create_context_and_target(corpus)
+        self.assertListEqual(context, [(1, 1), (2, 3), (1, 2), (3, 4)])
+        self.assertListEqual(target, [2, 1, 3, 2])

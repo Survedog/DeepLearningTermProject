@@ -31,4 +31,12 @@ def create_corpus_and_dict(text):
     return corpus, id_to_word, word_to_id
 
 
+def create_context_and_target(corpus):
+    assert(len(corpus) >= 3)
+    context, target = [], []
 
+    for target_idx in range(1, len(corpus)-1):
+        context.append((corpus[target_idx - 1], corpus[target_idx + 1]))
+        target.append(corpus[target_idx])
+
+    return context, target
