@@ -1,6 +1,5 @@
 import unittest
 from embedding_layer import *
-from utils import get_one_hot_encoding
 
 
 class EmbeddingLayerTests(unittest.TestCase):
@@ -40,13 +39,13 @@ class EmbeddingDotLayerTests(unittest.TestCase):
                       [9, 8, 7, 6, 5]])
 
         embed_dot_layer = EmbeddingDotLayer(weight)
-        point = embed_dot_layer.forward(word_ids, h)
+        score = embed_dot_layer.forward(word_ids, h)
 
         # dot result
         # [0, 6, 14, 24, 36],
         # [20, 18, 14, 8, 0],
         # [45, 48, 49, 48, 45]
-        self.assertTrue(np.array_equal(point, np.array([80, 60, 235])))
+        self.assertTrue(np.array_equal(score, np.array([80, 60, 235])))
 
         dout = np.array([0, 1, 2])
         dh = embed_dot_layer.backward(dout)

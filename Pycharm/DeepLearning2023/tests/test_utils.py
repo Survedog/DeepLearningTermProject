@@ -1,4 +1,7 @@
 import unittest
+
+import numpy as np
+
 from utils import *
 
 
@@ -7,9 +10,20 @@ class UtilsTests(unittest.TestCase):
     def test_sigmoid(self):
         self.assertEqual(sigmoid(0), 0.5)
         self.assertEqual(sigmoid(-1), 1 / (1 + np.e))
-        self.assertTrue(np.array_equal(sigmoid(np.array([1, 2])),
-                                       np.array([1 / (1 + np.exp(-1)),
-                                                 1 / (1 + np.exp(-2))])))
+
+        # 1d array
+        answer = np.array([1 / (1 + np.exp(-1)),
+                           1 / (1 + np.exp(-2))])
+        self.assertTrue(
+            np.array_equal(sigmoid(np.array([1, 2])), answer)
+        )
+
+        # 2d array
+        answer = np.array([[1 / (1 + np.exp(-1)), 1 / (1 + np.exp(-2))],
+                           [1 / (1 + np.exp(-3)), 1 / (1 + np.exp(-4))]])
+        self.assertTrue(
+            np.array_equal(sigmoid(np.array([[1, 2], [3, 4]])), answer)
+        )
 
     def test_create_corpus_and_dict(self):
         text = "안녕하세요. 저는 프로그래머입니다. 만나서 반갑습니다."
@@ -43,3 +57,15 @@ class UtilsTests(unittest.TestCase):
         answer[99] = 1
         self.assertTrue(np.array_equal(encoded, answer))
 
+    def test_get_class_cross_entropy(self):
+        y = np.array([0.1, 0.2, 0.7])
+        t = np.array([2])
+        self.assertEqual(get_class_cross_entropy(y, t), -np.log(0.7))
+
+        y = np.array([[0.1, 0.7, 0.2],
+                      [0.5, 0.4, 0.1]])
+        t = np.array([1, 0])
+        self.assertTrue(
+            np.array_equal(get_class_cross_entropy(y, t),
+                           np.array([-np.log(0.7), -np.log(0.5)]))
+        )

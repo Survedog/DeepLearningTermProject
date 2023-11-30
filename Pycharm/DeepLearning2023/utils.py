@@ -46,3 +46,14 @@ def get_one_hot_encoding(num, array_size):
     encoded = np.zeros(array_size)
     encoded[num] = 1
     return encoded
+
+
+def get_class_cross_entropy(y, t):
+    '''
+    분류 문제에서의 Cross Entropy
+    t: 정답 레이블 인덱스
+    '''
+    if y.ndim == 1:
+        return -np.log(y[t])
+    else:
+        return -np.log(y[range(t.size), t])
