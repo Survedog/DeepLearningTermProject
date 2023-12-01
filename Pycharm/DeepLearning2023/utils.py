@@ -14,6 +14,10 @@ def sigmoid(values):
 
 
 def create_corpus_and_dict(text):
+    """
+    :param text: corpus를 만들 문장
+    :return: corpus(list), id_to_word(dict), word_to_id(dict)
+    """
     parsed_text = text_parser.morphs(text)
     corpus = []
     id_to_word = {}
@@ -32,6 +36,10 @@ def create_corpus_and_dict(text):
 
 
 def create_context_and_target(corpus):
+    """
+    :param corpus: 문맥과 타겟 데이터를 만들기 위한 단어 id 배열
+    :return: context(list), target(list)
+    """
     assert(len(corpus) >= 3)
     context, target = [], []
 

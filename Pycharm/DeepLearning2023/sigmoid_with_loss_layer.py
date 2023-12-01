@@ -8,7 +8,7 @@ else:
     import numpy as np
 
 
-class SigmoidWithLoss(LayerBase):
+class SigmoidWithLossLayer(LayerBase):
 
     def __init__(self):
         super().__init__()
