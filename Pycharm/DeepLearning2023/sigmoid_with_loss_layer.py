@@ -1,11 +1,6 @@
-from config import Config
 from base_layer import LayerBase
 from utils import sigmoid, get_class_cross_entropy
-
-if Config.USE_GPU:
-    import cupy as np
-else:
-    import numpy as np
+from utils import np
 
 
 class SigmoidWithLossLayer(LayerBase):

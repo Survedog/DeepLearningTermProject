@@ -32,7 +32,7 @@ def create_corpus_and_dict(text):
 
         corpus.append(word_to_id[word])
 
-    return corpus, id_to_word, word_to_id
+    return np.array(corpus), id_to_word, word_to_id
 
 
 def create_context_and_target(corpus):
@@ -47,7 +47,7 @@ def create_context_and_target(corpus):
         context.append((corpus[target_idx - 1], corpus[target_idx + 1]))
         target.append(corpus[target_idx])
 
-    return context, target
+    return np.array(context), np.array(target)
 
 
 def get_one_hot_encoding(num, array_size):

@@ -1,10 +1,5 @@
 from base_layer import LayerBase
-from config import Config
-
-if Config.USE_GPU:
-    import cupy as np
-else:
-    import numpy as np
+from utils import np
 
 
 class EmbeddingLayer(LayerBase):
