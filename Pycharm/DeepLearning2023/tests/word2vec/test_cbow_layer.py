@@ -1,5 +1,5 @@
 import unittest
-from cbow_layer import *
+from word2vec.cbow_layer import *
 from utils import create_corpus_and_dict, create_context_and_target
 
 

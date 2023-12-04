@@ -1,5 +1,5 @@
 import unittest
-from embedding_layer import *
+from word2vec.embedding_layer import *
 
 
 class EmbeddingLayerTests(unittest.TestCase):

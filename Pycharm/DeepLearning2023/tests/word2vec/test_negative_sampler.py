@@ -1,5 +1,5 @@
 import unittest
-from negative_sampler import *
+from word2vec.negative_sampler import *
 
 
 class EmbeddingLayerTests(unittest.TestCase):

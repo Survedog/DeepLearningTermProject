@@ -1,8 +1,6 @@
 import unittest
 
-import numpy as np
-
-from sigmoid_with_loss_layer import *
+from word2vec.sigmoid_with_loss_layer import *
 from utils import get_class_cross_entropy, sigmoid
 
 

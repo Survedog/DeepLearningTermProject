@@ -1,7 +1,7 @@
 from base_layer import LayerBase
-from embedding_layer import EmbeddingLayer, EmbeddingDotLayer
-from sigmoid_with_loss_layer import SigmoidWithLossLayer
-from negative_sampler import NegativeSampler
+from word2vec.embedding_layer import EmbeddingLayer, EmbeddingDotLayer
+from word2vec.sigmoid_with_loss_layer import SigmoidWithLossLayer
+from word2vec.negative_sampler import NegativeSampler
 from utils import np
 
 
