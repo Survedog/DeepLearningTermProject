@@ -57,11 +57,13 @@ def get_one_hot_encoding(num, array_size):
 
 
 def get_class_cross_entropy(y, t):
-    '''
+    """
     분류 문제에서의 Cross Entropy
-    t: 정답 레이블 인덱스
-    '''
-    if y.ndim == 1:
-        return -np.log(y[t])
-    else:
-        return -np.log(y[range(t.size), t])
+    :param y: 각 클래스의 확률 (N x S x 클래스 수)
+    :param t: 정답 클래스 레이블 (N x S)
+    :return: Cross Entropy 손실 값 (N x S)
+    """
+
+    batch_index = np.repeat(np.arange(0, t.shape[0]), t.shape[1]).reshape(t.shape)
+    sample_index = np.resize(np.arange(0, t.shape[1]), t.shape)
+    return -np.log(y[batch_index, sample_index, t])

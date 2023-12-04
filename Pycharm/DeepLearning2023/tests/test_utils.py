@@ -62,14 +62,60 @@ class UtilsTests(unittest.TestCase):
         self.assertTrue(np.array_equal(encoded, answer))
 
     def test_get_class_cross_entropy(self):
-        y = np.array([0.1, 0.2, 0.7])
-        t = np.array([2])
-        self.assertEqual(get_class_cross_entropy(y, t), -np.log(0.7))
+        # 3차원 배열 (배치 처리)
+        # N = 2, S = 2일 때
+        y = np.array([[[0.8, 0.2],
+                       [0.3, 0.7]],
 
-        y = np.array([[0.1, 0.7, 0.2],
-                      [0.5, 0.4, 0.1]])
-        t = np.array([1, 0])
+                      [[0.5, 0.5],
+                       [0.6, 0.4]]])
+        t = np.array([[0, 1],
+                      [0, 0]])
+
         self.assertTrue(
             np.array_equal(get_class_cross_entropy(y, t),
-                           np.array([-np.log(0.7), -np.log(0.5)]))
-        )
+                           -np.log([[0.8, 0.7],
+                                    [0.5, 0.6]])))
+
+        # N = 1, S = 2일 때
+        y = np.array([[[0.7, 0.3]]])
+        t = np.array([[0]])
+
+        self.assertTrue(
+            np.array_equal(get_class_cross_entropy(y, t),
+                           ([[-np.log(0.7)]])))
+
+        # N = 2, S = 3일 때
+        y = np.array([[[0.8, 0.2],
+                       [0.5, 0.5],
+                       [0.9, 0.1]],
+
+                      [[0.5, 0.5],
+                       [0.2, 0.8],
+                       [0.6, 0.4]]])
+        t = np.array([[0, 0, 1],
+                      [0, 1, 0]])
+
+        self.assertTrue(
+            np.array_equal(get_class_cross_entropy(y, t),
+                           -np.log([[0.8, 0.5, 0.1],
+                                    [0.5, 0.8, 0.6]])))
+
+        # N = 3, S = 2일 때
+        y = np.array([[[0.8, 0.2],
+                       [0.5, 0.5]],
+
+                      [[0.5, 0.5],
+                       [0.2, 0.8]],
+
+                      [[0.4, 0.6],
+                       [0.7, 0.3]]])
+        t = np.array([[0, 1],
+                      [1, 0],
+                      [0, 0]])
+
+        self.assertTrue(
+            np.array_equal(get_class_cross_entropy(y, t),
+                           -np.log([[0.8, 0.5],
+                                    [0.5, 0.2],
+                                    [0.4, 0.7]])))

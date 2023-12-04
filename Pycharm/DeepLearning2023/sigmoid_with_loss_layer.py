@@ -11,7 +11,7 @@ class SigmoidWithLossLayer(LayerBase):
 
     def forward(self, x, t):
         y = sigmoid(x)
-        loss = get_class_cross_entropy(np.stack((1-y, y), axis=1), t)
+        loss = get_class_cross_entropy(np.stack((1-y, y), axis=2), t)
         self.cache = (y, t)
         return loss
 

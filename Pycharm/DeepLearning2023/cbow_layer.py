@@ -7,9 +7,8 @@ from utils import np
 
 class CBowLayer(LayerBase):
 
-    def __init__(self, corpus, window_size, vocab_size, hidden_size, sample_size, weight_in, weight_out):
+    def __init__(self, corpus, vocab_size, hidden_size, sample_size, weight_in, weight_out):
         super().__init__()
-        self.window_size = window_size
         self.vocab_size = vocab_size
         self.hidden_size = hidden_size
         self.sample_size = sample_size
@@ -19,27 +18,34 @@ class CBowLayer(LayerBase):
         self.loss_layer = SigmoidWithLossLayer()
 
         distribution = np.bincount(corpus, minlength=vocab_size) / len(corpus)
-        self.negative_sampler = NegativeSampler(sample_size, np.unique(corpus), distribution)
+        self.negative_sampler = NegativeSampler(np.unique(corpus), distribution)
 
         self.params.append(weight_in)
         self.params.append(weight_out)
-        self.grads.append(np.zeros_like(weight_in))
-        self.grads.append(np.zeros_like(weight_out))
+        self.grads.append(self.embed_in_layer.grads[0])
+        self.grads.append(self.embed_dot_layer.grads[0])
 
-    def forward(self, contexts, positive_label):
-        batch_size = positive_label.shape[0]
+        self.cache = None
+
+    def forward(self, contexts, true_target):
+        batch_size = true_target.shape[0]
 
         embed_contexts = self.embed_in_layer.forward(contexts)
-        h = np.sum(embed_contexts, axis=1) / (self.window_size * 2)
+        h = np.sum(embed_contexts, axis=1) / contexts.shape[1]
+        self.cache = contexts.shape[1]
 
-        negative_samples = self.negative_sampler.get_negative_samples(self.sample_size - 1, positive_label)
-        targets, target_bool_labels = np.hstack((positive_label.reshape(batch_size, 1), negative_samples))
-        score = self.embed_dot_layer.forward(targets, h)
+        samples, sample_labels = self.negative_sampler.get_mixed_samples_and_labels(self.sample_size, true_target)
+        sample_scores = self.embed_dot_layer.forward(samples, h)
 
-        self.loss_layer.forward(score, target_bool_labels)
+        sample_loss = self.loss_layer.forward(sample_scores, sample_labels)
+        return np.sum(sample_loss, axis=1)
 
     def backward(self, dout):
-        dWin, dWout = self.grads[0], self.grads[1]
-        dWin[...] = 0
-        dWout[...] = 0
-        return dWin, dWout
+        dsample_loss = np.repeat(dout[np.newaxis].T, self.sample_size, axis=1)
+        dscore = self.loss_layer.backward(dsample_loss)
+        dh = self.embed_dot_layer.backward(dscore)
+
+        context_size = self.cache
+        dembed_sum = dh/context_size
+        dembed_context = np.repeat(dembed_sum[:, np.newaxis, :], context_size, axis=1)
+        self.embed_in_layer.backward(dembed_context)
