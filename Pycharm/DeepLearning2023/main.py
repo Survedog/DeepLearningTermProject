@@ -21,8 +21,8 @@ if __name__ == '__main__':
     learning_rate = 0.001
 
     # 트레이너 설정
-    max_epoch = 32
-    batch_size = 5
+    max_epoch = 10000
+    batch_size = 10
 
     word2vec = CBowLayer(corpus, vocab_size, hidden_size, sample_size, weight_in, weight_out)
     optimizer = AdamOptimizer(learning_rate)
@@ -32,4 +32,4 @@ if __name__ == '__main__':
                 answer=target,
                 batch_size=batch_size,
                 max_epoch=max_epoch,
-                print_interval=1)
+                print_interval=100)
