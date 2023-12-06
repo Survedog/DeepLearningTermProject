@@ -26,12 +26,12 @@ class Trainer:
                 answer_batch = answer[batch_start:batch_end]
                 loss = self.model.forward(data_batch, answer_batch)
 
-                dout = np.ones(batch_end - batch_start)
-                self.model.backward(dout)
-
-                self.optimizer.update(self.model.params, self.model.grads)
                 epoch_total_loss += np.sum(loss) / batch_size
                 loss_count += 1
+
+                dout = np.ones(batch_end - batch_start)
+                self.model.backward(dout)
+                self.optimizer.update(self.model.params, self.model.grads)
 
             if print_info and (epoch % print_interval) == 0:
                 avg_loss = epoch_total_loss / loss_count

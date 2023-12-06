@@ -12,6 +12,7 @@ class CBowLayer(LayerBase):
         self.vocab_size = vocab_size
         self.hidden_size = hidden_size
         self.sample_size = sample_size
+        self.context_size = None
 
         self.embed_in_layer = EmbeddingLayer(weight_in)
         self.embed_dot_layer = EmbeddingDotLayer(weight_out)
@@ -25,14 +26,19 @@ class CBowLayer(LayerBase):
         self.grads.append(self.embed_in_layer.grads[0])
         self.grads.append(self.embed_dot_layer.grads[0])
 
-        self.cache = None
+    def calc_hidden(self, contexts):
+        self.context_size = contexts.shape[1]
+        embed_contexts = self.embed_in_layer.forward(contexts)
+        h = np.sum(embed_contexts, axis=1) / self.context_size
+        return h
+
+    def predict(self, contexts):
+        h = self.calc_hidden(contexts)
+        score = self.embed_dot_layer.forward(np.arange(0, self.vocab_size), h)
+        return np.argmax(score, axis=1)
 
     def forward(self, contexts, true_target):
-        batch_size = true_target.shape[0]
-
-        embed_contexts = self.embed_in_layer.forward(contexts)
-        h = np.sum(embed_contexts, axis=1) / contexts.shape[1]
-        self.cache = contexts.shape[1]
+        h = self.calc_hidden(contexts)
 
         samples, sample_labels = self.negative_sampler.get_mixed_samples_and_labels(self.sample_size, true_target)
         sample_scores = self.embed_dot_layer.forward(samples, h)
@@ -45,7 +51,6 @@ class CBowLayer(LayerBase):
         dscore = self.loss_layer.backward(dsample_loss)
         dh = self.embed_dot_layer.backward(dscore)
 
-        context_size = self.cache
-        dembed_sum = dh/context_size
-        dembed_context = np.repeat(dembed_sum[:, np.newaxis, :], context_size, axis=1)
+        dembed_sum = dh / self.context_size
+        dembed_context = np.repeat(dembed_sum[:, np.newaxis, :], self.context_size, axis=1)
         self.embed_in_layer.backward(dembed_context)
