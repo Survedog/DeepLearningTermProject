@@ -8,6 +8,7 @@ class Trainer:
         self.model = model
         self.optimizer = optimizer
 
+    # todo: 랜덤 미니배치 처리 구현
     def fit(self, train_data, answer, batch_size=Config.DEFAULT_BATCH_SIZE,
             max_epoch=Config.DEFAULT_MAX_EPOCH, print_info=True, print_interval=1):
 

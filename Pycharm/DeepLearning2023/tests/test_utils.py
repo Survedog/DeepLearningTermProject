@@ -28,13 +28,19 @@ class UtilsTests(unittest.TestCase):
     def test_create_corpus_and_dict(self):
         text = "안녕하세요. 저는 프로그래머입니다. 만나서 반갑습니다."
         corpus, id_to_word, word_to_id = create_corpus_and_dict(text)
-
         parsed_text = text_parser.morphs(text)
 
         for idx, word_id in enumerate(corpus):
             word = parsed_text[idx]
             self.assertEqual(word, id_to_word[word_id])
             self.assertEqual(word_id, word_to_id[word])
+
+        text = ["안녕하세요. 저는 프로그래머입니다.", "만나서 반갑습니다."]
+        corpus2, id_to_word2, word_to_id2 = create_corpus_and_dict(text)
+
+        self.assertTrue(np.array_equal(corpus, corpus2))
+        self.assertDictEqual(id_to_word, id_to_word2)
+        self.assertDictEqual(word_to_id, word_to_id2)
 
     def test_create_context_and_target(self):
         corpus = [1, 2, 1, 3, 2, 4]
@@ -119,3 +125,14 @@ class UtilsTests(unittest.TestCase):
                            -np.log([[0.8, 0.5],
                                     [0.5, 0.2],
                                     [0.4, 0.7]])))
+
+    def test_load_essay_data(self):
+        train_data = load_essay_data(load_test_data=False, load_pickle=False)
+        test_data = load_essay_data(load_test_data=True, load_pickle=False)
+        self.assertTrue(train_data)
+        self.assertTrue(test_data)
+
+        train_data = load_essay_data(load_test_data=False, load_pickle=True)
+        test_data = load_essay_data(load_test_data=True, load_pickle=True)
+        self.assertTrue(train_data)
+        self.assertTrue(test_data)
