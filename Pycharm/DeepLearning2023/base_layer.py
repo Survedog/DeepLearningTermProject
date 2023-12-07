@@ -26,5 +26,8 @@ class LayerBase(metaclass=ABCMeta):
     def load_params(self, pickle_name=None):
         if pickle_name is None:
             pickle_name = self.default_params_pickle_name
-        data = load_data(pickle_name)
-        self.params = data if (data is not None) else []
+        loaded_params = load_data(pickle_name)
+
+        if loaded_params:
+            for param, loaded_param in zip(self.params, loaded_params):
+                param[...] = loaded_param
