@@ -11,8 +11,8 @@ class CBowLayerTests(unittest.TestCase):
 
         hidden_size = 3
         vocab_size = len(id_to_word)
-        weight_in = np.random.rand(vocab_size, hidden_size)
-        weight_out = np.random.rand(vocab_size, hidden_size)
+        weight_in = py.random.rand(vocab_size, hidden_size)
+        weight_out = py.random.rand(vocab_size, hidden_size)
 
         cbow = CBowLayer(corpus=corpus,
                          vocab_size=vocab_size,
@@ -22,20 +22,20 @@ class CBowLayerTests(unittest.TestCase):
                          weight_out=weight_out)
 
         cbow.forward(contexts[0:1], true_label[0:1])
-        dout = np.ones(1)
+        dout = py.ones(1)
         cbow.backward(dout)
         dWin, dWout = cbow.grads[0], cbow.grads[1]
 
         # dWin에서 입력 문맥의 기울기만 갱신되는지 확인
-        dWin_sum = np.sum(dWin, axis=1)
-        input_mask = np.zeros_like(dWin_sum, dtype=bool)
+        dWin_sum = py.sum(dWin, axis=1)
+        input_mask = py.zeros_like(dWin_sum, dtype=bool)
         input_mask[contexts[0:1]] = True
-        self.assertTrue(np.all(dWin_sum[input_mask]))
-        self.assertFalse(np.any(dWin_sum[~input_mask]))
+        self.assertTrue(py.all(dWin_sum[input_mask]))
+        self.assertFalse(py.any(dWin_sum[~input_mask]))
 
         # 배치 입력의 경우
         cbow.forward(contexts[0:3], true_label[0:3])
-        dout = np.ones(3)
+        dout = py.ones(3)
         cbow.backward(dout)
         dWin, dWout = cbow.grads[0], cbow.grads[1]
 
@@ -44,8 +44,8 @@ class CBowLayerTests(unittest.TestCase):
         self.assertEqual(dWout.shape, weight_out.shape)
 
         # dWin에서 입력한 배치 내 문맥들의 기울기만 갱신되는지 확인
-        dWin_sum = np.sum(dWin, axis=1)
-        input_mask = np.zeros_like(dWin_sum, dtype=bool)
+        dWin_sum = py.sum(dWin, axis=1)
+        input_mask = py.zeros_like(dWin_sum, dtype=bool)
         input_mask[contexts[0:3]] = True
-        self.assertTrue(np.all(dWin_sum[input_mask]))
-        self.assertFalse(np.any(dWin_sum[~input_mask]))
+        self.assertTrue(py.all(dWin_sum[input_mask]))
+        self.assertFalse(py.any(dWin_sum[~input_mask]))

@@ -1,5 +1,5 @@
 from base_layer import LayerBase
-from utils import np
+from utils import py
 
 
 class EmbeddingLayer(LayerBase):
@@ -7,7 +7,7 @@ class EmbeddingLayer(LayerBase):
     def __init__(self, weight):
         super().__init__()
         self.params.append(weight)
-        self.grads.append(np.zeros_like(weight))
+        self.grads.append(py.zeros_like(weight))
         self.word_ids = None
         pass
 
@@ -20,7 +20,7 @@ class EmbeddingLayer(LayerBase):
         dWeight = self.grads[0]
         dWeight[...] = 0
 
-        np.add.at(dWeight, self.word_ids, dout)
+        py.add.at(dWeight, self.word_ids, dout)
         return dWeight
 
 
@@ -40,10 +40,10 @@ class EmbeddingDotLayer(LayerBase):
         :return: 은닉층과 각 샘플의 내적 값의 배치 (N)
         """
         embedded = self.embed_layer.forward(word_ids)
-        h = np.expand_dims(h, axis=1)
+        h = py.expand_dims(h, axis=1)
         dotted = h * embedded
         self.cache = (h, embedded)
-        return np.sum(dotted, axis=2)
+        return py.sum(dotted, axis=2)
 
     def backward(self, dout):
         """
@@ -53,12 +53,12 @@ class EmbeddingDotLayer(LayerBase):
         h, embedded = self.cache
 
         # (N, 1, H) * (N, S, 1) -> (N, S, H)
-        dEmbed = h * np.expand_dims(dout, axis=2)
+        dEmbed = h * py.expand_dims(dout, axis=2)
         self.embed_layer.backward(dEmbed)
 
         # (N, S, H) * (N, S, 1) -> (N, S, H)
-        dh = embedded * np.expand_dims(dout, axis=2)
+        dh = embedded * py.expand_dims(dout, axis=2)
 
         # (N, S, H) -> (N, H)
-        dh = np.sum(dh, axis=1)
+        dh = py.sum(dh, axis=1)
         return dh

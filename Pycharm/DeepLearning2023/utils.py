@@ -1,19 +1,20 @@
 from config import Config
-from konlpy.tag import Kkma
+from konlpy.tag import Komoran
 from pathlib import Path
 import json
 import pickle
+import numpy
 
 if Config.USE_GPU:
-    import cupy as np
+    import cupy as py
 else:
-    import numpy as np
+    import numpy as py
 
-text_parser = Kkma()
+text_parser = Komoran()
 
 
 def sigmoid(values):
-    return 1 / (1 + np.exp(-values))
+    return 1 / (1 + py.exp(-values))
 
 
 def create_corpus_and_dict(text_list):
@@ -29,8 +30,13 @@ def create_corpus_and_dict(text_list):
     word_to_id = {}
     id_count = 0
 
-    for text in text_list:
-        parsed_text = text_parser.morphs(text)
+    for i, text in enumerate(text_list):
+        print('Create corpus from text[%d/%d] - id_count: %d' % (i, len(text_list), id_count))
+        try:
+            parsed_text = text_parser.morphs(text)
+        except UnicodeDecodeError:
+            print('Error while parsing text[%d/%d]' % (i, len(text_list)))
+            continue
 
         for word in parsed_text:
             if word not in word_to_id:
@@ -40,7 +46,7 @@ def create_corpus_and_dict(text_list):
 
             corpus.append(word_to_id[word])
 
-    return np.array(corpus), id_to_word, word_to_id
+    return py.array(corpus), id_to_word, word_to_id
 
 
 def create_context_and_target(corpus):
@@ -49,17 +55,14 @@ def create_context_and_target(corpus):
     :return: context(list), target(list)
     """
     assert(len(corpus) >= 3)
-    context, target = [], []
+    context = py.stack((corpus[0:-2], corpus[2:]), axis=-1)
+    target = py.array(corpus[1:-1])
 
-    for target_idx in range(1, len(corpus)-1):
-        context.append((corpus[target_idx - 1], corpus[target_idx + 1]))
-        target.append(corpus[target_idx])
-
-    return np.array(context), np.array(target)
+    return context, target
 
 
 def get_one_hot_encoding(num, array_size):
-    encoded = np.zeros(array_size)
+    encoded = py.zeros(array_size)
     encoded[num] = 1
     return encoded
 
@@ -72,17 +75,34 @@ def get_class_cross_entropy(y, t):
     :return: Cross Entropy 손실 값 (N x S)
     """
 
-    batch_index = np.repeat(np.arange(0, t.shape[0]), t.shape[1]).reshape(t.shape)
-    sample_index = np.resize(np.arange(0, t.shape[1]), t.shape)
-    return -np.log(y[batch_index, sample_index, t])
+    batch_index = py.repeat(py.arange(t.shape[0]), t.shape[1]).reshape(t.shape)
+    sample_index = py.resize(py.arange(t.shape[1]), t.shape)
+    return -py.log(y[batch_index, sample_index, t])
 
 
-def load_essay_data(load_test_data, load_pickle=True):
-    pickle_path = Config.PICKLE_PATH.joinpath('essay_data_' + ('test.p' if load_test_data else 'train.p'))
+def save_data(pickle_name, data):
+    pickle_path = Config.PICKLE_PATH.joinpath(pickle_name)
+    with open(pickle_path, "wb") as f:
+        pickle.dump(data, f)
+
+
+def load_data(pickle_name):
+    path = Config.PICKLE_PATH.joinpath(pickle_name)
+    try:
+        with open(path, "rb") as f:
+            data = pickle.load(f)
+        return data
+    except FileNotFoundError:
+        print('Error - load_pickle: pickle file does not exist.')
+        return None
+
+
+def load_essay_data_list(load_test_data, load_pickle=True):
+    pickle_name = 'essay_data_' + ('test.p' if load_test_data else 'train.p')
     if load_pickle:
-        with open(pickle_path, "rb") as f:
-            data_list = pickle.load(f)
-        return data_list
+        data_list = load_data(pickle_name)
+        if data_list is not None:
+            return data_list
 
     data_list = []
     json_files = Config.DATA_DIR_PATH.joinpath('test_data' if load_test_data else 'train_data').glob('**/*.json')
@@ -91,7 +111,31 @@ def load_essay_data(load_test_data, load_pickle=True):
         with open(file_path, "r", encoding='UTF-8') as f:
             data_list.append(json.load(f))
 
-    with open(pickle_path, "wb") as f:
-        pickle.dump(data_list, f)
-
+    save_data(pickle_name, data_list)
     return data_list
+
+
+def create_essay_corpus_and_dict(load_pickle=True, batch_size=100):
+    pickle_name = 'corpus_and_dicts.p'
+    if load_pickle:
+        data = load_data(pickle_name)
+        if data is not None:
+            return data
+
+    essay_data_list = load_essay_data_list(load_test_data=False, load_pickle=True)
+    text_list = []
+    text_batch = []
+
+    for essay_data in essay_data_list:
+        for paragraph in essay_data['paragraph']:
+            text = paragraph['paragraph_txt'].replace('\n', '').replace('\r', '').replace('\t', '')
+            text_batch += text.split('#@문장구분#')[0:-1]
+
+            if len(text_batch) % batch_size == 0 and len(text_batch) != 0:
+                text_list.append(''.join(text_batch))
+                text_batch = []
+    text_list.append(''.join(text_batch))
+
+    corpus, id_to_word, word_to_id = create_corpus_and_dict(text_list)
+    save_data(pickle_name, (corpus, id_to_word, word_to_id))
+    return corpus, id_to_word, word_to_id
