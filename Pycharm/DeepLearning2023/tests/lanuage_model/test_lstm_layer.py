@@ -21,7 +21,7 @@ class LSTMLayerTests(unittest.TestCase):
 
         weight_x = py.random.rand(vocab_size, hidden_size * 4)
         weight_h = py.random.rand(hidden_size, hidden_size * 4)
-        bias = py.random.rand(batch_size, hidden_size * 4)
+        bias = py.random.rand(1, hidden_size * 4)
 
         try:
             layer = LSTMLayer(weight_x, weight_h, bias)
