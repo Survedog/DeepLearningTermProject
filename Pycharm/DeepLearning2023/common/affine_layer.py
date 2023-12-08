@@ -16,6 +16,9 @@ class AffineLayer(LayerBase):
         :return out: 다음 계층의 노드 값들
         '''
         # todo: 3차원 입력이 들어오면 2차원으로 변환하기
+        if x.ndim >= 3:
+            x = x.reshape(-1, x.shape[-1])
+
         weight, bias = self.params
         out = py.matmul(x, weight) + bias
 
