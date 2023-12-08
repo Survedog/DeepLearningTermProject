@@ -1,5 +1,5 @@
 import unittest
-from adam_optimizer import *
+from common.adam_optimizer import *
 
 
 class AdamOptimizerTests(unittest.TestCase):

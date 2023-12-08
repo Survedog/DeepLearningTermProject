@@ -1,6 +1,6 @@
 import unittest
 from word2vec.cbow_model import *
-from utils import create_corpus_and_dict, create_context_and_target
+from common.utils import create_corpus_and_dict, create_context_and_target
 
 
 class CBowLayerTests(unittest.TestCase):

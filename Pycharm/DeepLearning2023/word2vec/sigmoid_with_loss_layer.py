@@ -1,5 +1,5 @@
-from base_layer import LayerBase
-from utils import py, sigmoid, get_class_cross_entropy
+from common.base_layer import LayerBase
+from common.utils import py, sigmoid, get_class_cross_entropy
 
 
 class SigmoidWithLossLayer(LayerBase):

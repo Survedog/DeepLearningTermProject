@@ -1,8 +1,8 @@
-from base_layer import LayerBase
+from common.base_layer import LayerBase
 from word2vec.embedding_layer import EmbeddingLayer, EmbeddingDotLayer
 from word2vec.sigmoid_with_loss_layer import SigmoidWithLossLayer
 from word2vec.negative_sampler import NegativeSampler
-from utils import py
+from common.utils import py
 
 
 class CBowModel(LayerBase):

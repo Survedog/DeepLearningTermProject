@@ -1,5 +1,5 @@
 from abc import *
-from utils import load_data, save_data
+from common.utils import load_data, save_data
 
 
 class LayerBase(metaclass=ABCMeta):

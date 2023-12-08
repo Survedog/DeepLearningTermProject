@@ -1,4 +1,4 @@
-from base_layer import LayerBase
+from common.base_layer import LayerBase
 
 
 class LanguageModel(LayerBase):

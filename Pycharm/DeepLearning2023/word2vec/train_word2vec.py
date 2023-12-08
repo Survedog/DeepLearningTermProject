@@ -1,7 +1,7 @@
-from utils import py, create_essay_corpus_and_dict, create_context_and_target
+from common.utils import py, create_essay_corpus_and_dict, create_context_and_target
 from word2vec.cbow_model import CBowModel
-from adam_optimizer import AdamOptimizer
-from trainer import Trainer
+from common.adam_optimizer import AdamOptimizer
+from common.trainer import Trainer
 from config import Config
 
 if __name__ == '__main__':

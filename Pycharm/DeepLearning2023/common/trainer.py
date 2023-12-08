@@ -1,6 +1,6 @@
 from matplotlib import pyplot as plt
 from config import Config
-from utils import py
+from common.utils import py
 import numpy
 import time
 
@@ -11,8 +11,8 @@ class Trainer:
         self.optimizer = optimizer
         self.loss_list = None
 
-    def fit(self, train_data, answer, batch_size=Config.DEFAULT_BATCH_SIZE, random_batch=True,
-            max_epoch=Config.DEFAULT_MAX_EPOCH, print_info=True, print_interval=1):
+    def fit(self, train_data, answer, batch_size=100, random_batch=True,
+            max_epoch=20, print_info=True, print_interval=1):
 
         iters_per_epoch = int(py.ceil(train_data.shape[0] / batch_size))
         self.loss_list = []
@@ -43,7 +43,7 @@ class Trainer:
                 self.optimizer.update(self.model.params, self.model.grads)
 
                 if print_info:
-                    print('[Trainer] Epoch %d - Iteration[%d/%d] - 경과 시간: %.2fs' % (epoch, iteration, iters_per_epoch, time.time() - start))
+                    print('[Trainer] Epoch[%d/%d] - Iteration[%d/%d] - 경과 시간: %.2fs' % (epoch, max_epoch, iteration, iters_per_epoch, time.time() - start))
 
             if print_info and (epoch % print_interval) == 0:
                 avg_loss = epoch_total_loss / loss_count

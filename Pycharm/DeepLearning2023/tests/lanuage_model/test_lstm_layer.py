@@ -1,7 +1,7 @@
 import unittest
 import traceback
 from language_model.lstm_layer import LSTMLayer
-from utils import py
+from common.utils import py
 
 
 class LSTMLayerTests(unittest.TestCase):

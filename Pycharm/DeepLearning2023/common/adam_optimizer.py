@@ -1,6 +1,6 @@
 import numpy
-from utils import py
-from base_optimizer import OptimizerBase
+from common.utils import py
+from common.base_optimizer import OptimizerBase
 
 
 

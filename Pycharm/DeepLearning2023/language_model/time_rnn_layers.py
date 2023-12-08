@@ -1,6 +1,6 @@
-from base_layer import LayerBase
+from common.base_layer import LayerBase
 from language_model.lstm_layer import LSTMLayer
-from utils import py
+from common.utils import py
 
 # todo: LSTM 이외의 다른 RNN 모델에도 대응 가능하도록 수정
 class TimeLSTMLayer(LayerBase):

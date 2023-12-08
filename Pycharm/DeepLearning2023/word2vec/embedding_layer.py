@@ -1,5 +1,5 @@
-from base_layer import LayerBase
-from utils import py
+from common.base_layer import LayerBase
+from common.utils import py
 
 
 class EmbeddingLayer(LayerBase):

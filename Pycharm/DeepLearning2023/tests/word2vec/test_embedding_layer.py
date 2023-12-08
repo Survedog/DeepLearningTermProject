@@ -1,5 +1,4 @@
 import unittest
-from utils import py
 from word2vec.embedding_layer import *
 
 

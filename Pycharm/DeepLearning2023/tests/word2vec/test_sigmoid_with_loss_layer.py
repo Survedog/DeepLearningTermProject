@@ -1,7 +1,7 @@
 import unittest
 
 from word2vec.sigmoid_with_loss_layer import *
-from utils import py, get_class_cross_entropy, sigmoid
+from common.utils import py, get_class_cross_entropy, sigmoid
 
 
 class SigmoidWithLossLayerTests(unittest.TestCase):
