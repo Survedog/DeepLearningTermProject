@@ -12,7 +12,7 @@ class LSTMLayer(LayerBase):
 
     def forward(self, x, h_prev, c_prev):
         weight_x, weight_h, bias = self.params
-        H = h_prev.shape[1]
+        H = h_prev.shape[1]  # hidden_size
 
         affine = py.matmul(weight_x, x) + py.matmul(weight_h, h_prev) + bias
         f, g, i, o = affine[:, :H], affine[:, H:2*H], affine[:, 2*H:3*H], affine[:, 3*H:4*H]
@@ -30,8 +30,6 @@ class LSTMLayer(LayerBase):
         return h, c
 
     def backward(self, dh, dc):
-        # todo: 깊은 곳에서 오는 dh 역전파는 어디서 처리하지?
-
         x, h_prev, c_prev, tanh_c, f, g, i, o = self.cache
 
         dtanh_c = dh * o
@@ -52,5 +50,6 @@ class LSTMLayer(LayerBase):
         dbias[...] = daffine
 
         dh_prev = py.matmul(daffine, weight_h.T)
-        # todo: dx를 넘길 필요가 있나?
-        return dh_prev, dc_prev
+        dx = py.matmul(daffine, weight_x.T)
+
+        return dx, dh_prev, dc_prev
