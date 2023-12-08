@@ -8,11 +8,11 @@ from common.utils import py
 
 class LanguageModel(LayerBase):
 
-    def __init__(self, vocab_size, wordvec_size, hidden_size):
+    def __init__(self, vocab_size, wordvec_size, hidden_size, embed_weight=None):
         super().__init__()
 
-        # todo: wordvec에 word2vec의 가중치 사용할 수 있는지 확인
-        embed_weight = py.random.rand(vocab_size, wordvec_size)
+        load_embed_weight = embed_weight is not None
+
         lstm_weight_x = py.random.rand(wordvec_size, 4 * hidden_size)
         lstm_weight_h = py.random.rand(hidden_size, 4 * hidden_size)
         lstm_bias = py.zeros(4 * hidden_size)
@@ -24,9 +24,10 @@ class LanguageModel(LayerBase):
                        AffineLayer(affine_weight, affine_bias)]
         self.loss_layer = SoftmaxWithLossLayer()
 
-        for layer in self.layers:
-            self.params += layer.params
-            self.grads += layer.grads
+        save_grad_from = 1 if load_embed_weight else 0
+        for i in range(save_grad_from, len(self.layers)):
+            self.params += self.layers[i].params
+            self.grads += self.layers[i].grads
 
     def predict(self, xs):
         for layer in self.layers:
