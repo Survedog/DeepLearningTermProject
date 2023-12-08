@@ -1,7 +1,7 @@
 from base_layer import LayerBase
 
 
-class TimeLSTMLayer(LayerBase):
+class TimeRNNLayer(LayerBase):
 
     def __init__(self):
         pass

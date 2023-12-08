@@ -1,6 +1,6 @@
 import unittest
 from utils import py, create_corpus_and_dict, create_context_and_target
-from word2vec.cbow_layer import CBowLayer
+from word2vec.cbow_model import CBowModel
 from adam_optimizer import AdamOptimizer
 from trainer import Trainer
 from config import Config
@@ -27,7 +27,7 @@ class TrainerTests(unittest.TestCase):
         max_epoch = 1000
         batch_size = 10
 
-        word2vec = CBowLayer(corpus, vocab_size, hidden_size, sample_size, weight_in, weight_out)
+        word2vec = CBowModel(corpus, vocab_size, hidden_size, sample_size, weight_in, weight_out)
         optimizer = AdamOptimizer(learning_rate)
         trainer = Trainer(word2vec, optimizer)
 

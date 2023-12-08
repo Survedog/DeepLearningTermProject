@@ -1,5 +1,5 @@
 from utils import py, create_essay_corpus_and_dict, create_context_and_target
-from word2vec.cbow_layer import CBowLayer
+from word2vec.cbow_model import CBowModel
 from adam_optimizer import AdamOptimizer
 from trainer import Trainer
 from config import Config
@@ -33,7 +33,7 @@ if __name__ == '__main__':
     save_params = False
 
     print('Creating model...')
-    word2vec = CBowLayer(corpus, vocab_size, hidden_size, sample_size, weight_in, weight_out)
+    word2vec = CBowModel(corpus, vocab_size, hidden_size, sample_size, weight_in, weight_out)
     optimizer = AdamOptimizer(learning_rate)
     trainer = Trainer(word2vec, optimizer)
 

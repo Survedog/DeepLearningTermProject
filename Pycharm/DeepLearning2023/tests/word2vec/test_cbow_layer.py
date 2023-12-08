@@ -1,5 +1,5 @@
 import unittest
-from word2vec.cbow_layer import *
+from word2vec.cbow_model import *
 from utils import create_corpus_and_dict, create_context_and_target
 
 
@@ -14,7 +14,7 @@ class CBowLayerTests(unittest.TestCase):
         weight_in = py.random.rand(vocab_size, hidden_size)
         weight_out = py.random.rand(vocab_size, hidden_size)
 
-        cbow = CBowLayer(corpus=corpus,
+        cbow = CBowModel(corpus=corpus,
                          vocab_size=vocab_size,
                          hidden_size=hidden_size,
                          sample_size=5,

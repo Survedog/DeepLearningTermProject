@@ -5,7 +5,7 @@ from word2vec.negative_sampler import NegativeSampler
 from utils import py
 
 
-class CBowLayer(LayerBase):
+class CBowModel(LayerBase):
 
     def __init__(self, corpus, vocab_size, hidden_size, sample_size, weight_in, weight_out):
         super().__init__()
