@@ -22,6 +22,51 @@ class UtilsTests(unittest.TestCase):
             py.array_equal(sigmoid(py.array([[1, 2], [3, 4]])), answer)
         )
 
+    def test_softmax(self):
+
+        # 1차원 입력
+        values = py.array([0, 1, 2, 3, 4])
+        result = softmax(values)
+
+        exp_sum = 1 + py.e + py.e ** 2 + py.e ** 3 + py.e ** 4
+        correct_result = py.array([1, py.e, py.e ** 2, py.e ** 3, py.e ** 4]) / exp_sum
+        self.assertTrue(py.allclose(result, correct_result))
+
+        # 2차원 입력
+        values = py.array([[0, 1, 2],
+                           [3, 4, 5]])
+        result = softmax(values)
+
+        exp_sum = [1 + py.e + py.e ** 2,
+                   py.e ** 3 + py.e ** 4 + py.e ** 5]
+        correct_result = py.array([[1, py.e, py.e ** 2],
+                                   [py.e ** 3, py.e ** 4, py.e ** 5]])
+        correct_result[0] /= exp_sum[0]
+        correct_result[1] /= exp_sum[1]
+        self.assertTrue(py.allclose(result, correct_result))
+
+        # 3차원 입력
+        values = py.array([[[0, 1, 2],
+                            [3, 4, 5]],
+
+                           [[6, 7, 8],
+                            [9, 10, 11]]])
+        result = softmax(values)
+
+        exp_sum = [[1 + py.e + py.e ** 2,
+                    py.e ** 3 + py.e ** 4 + py.e ** 5],
+                   [py.e ** 6 + py.e ** 7 + py.e ** 8,
+                    py.e ** 9 + py.e ** 10 + py.e ** 11]]
+        correct_result = py.array([[[1, py.e, py.e ** 2],
+                                    [py.e ** 3, py.e ** 4, py.e ** 5]],
+                                   [[py.e ** 6, py.e ** 7, py.e ** 8],
+                                    [py.e ** 9, py.e ** 10, py.e ** 11]]])
+        correct_result[0, 0] /= exp_sum[0][0]
+        correct_result[0, 1] /= exp_sum[0][1]
+        correct_result[1, 0] /= exp_sum[1][0]
+        correct_result[1, 1] /= exp_sum[1][1]
+        self.assertTrue(py.allclose(result, correct_result))
+
     def test_create_corpus_and_dict(self):
         text = "안녕하세요. 저는 프로그래머입니다. 만나서 반갑습니다."
         corpus, id_to_word, word_to_id = create_corpus_and_dict(text)
@@ -55,6 +100,7 @@ class UtilsTests(unittest.TestCase):
         self.assertTrue(py.array_equal(target, correct_target))
 
     def test_get_one_hot_encoding(self):
+        # 1차원 입력
         encoded = get_one_hot_encoding(2, 5)
         answer = py.array([0, 0, 1, 0, 0])
         self.assertTrue(py.array_equal(encoded, answer))
@@ -69,9 +115,15 @@ class UtilsTests(unittest.TestCase):
         answer[99] = 1
         self.assertTrue(py.array_equal(encoded, answer))
 
+        # 2차원 입력
+        nums = py.array([0, 8, 2])
+        encoded = get_one_hot_encoding(nums, 10)
+        answer = py.zeros((3, 10))
+        answer[0, 0], answer[1, 8], answer[2, 2] = 1, 1, 1
+        self.assertTrue(py.array_equal(encoded, answer))
+
     def test_get_class_cross_entropy(self):
-        # 3차원 배열 (배치 처리)
-        # N = 2, S = 2일 때
+        # 입력: 2 x 2 x 2
         y = py.array([[[0.8, 0.2],
                        [0.3, 0.7]],
 
@@ -85,31 +137,30 @@ class UtilsTests(unittest.TestCase):
                            -py.log(py.array([[0.8, 0.7],
                                              [0.5, 0.6]]))))
 
-        # N = 1, S = 2일 때
-        y = py.array([[[0.7, 0.3]]])
-        t = py.array([[0]])
+        # 입력: 1 x 3
+        y = py.array([0.7, 0.2, 0.1])
+        t = py.array([0])
+
+        self.assertTrue(
+            py.array_equal(get_class_cross_entropy(y, t), py.array([-py.log(0.7)])))
+
+        #  입력: 2 x 3 x 1
+        y = py.array([[[0.8],
+                       [0.5],
+                       [0.9]],
+
+                      [[0.5],
+                       [0.2],
+                       [0.6]]])
+        t = py.array([[0, 0, 0],
+                      [0, 0, 0]])
 
         self.assertTrue(
             py.array_equal(get_class_cross_entropy(y, t),
-                           (py.array([[-py.log(0.7)]]))))
+                           -py.log(py.array([[0.8, 0.5, 0.9],
+                                             [0.5, 0.2, 0.6]]))))
 
-        # N = 2, S = 3일 때
-        y = py.array([[[0.8, 0.2],
-                       [0.5, 0.5],
-                       [0.9, 0.1]],
-
-                      [[0.5, 0.5],
-                       [0.2, 0.8],
-                       [0.6, 0.4]]])
-        t = py.array([[0, 0, 1],
-                      [0, 1, 0]])
-
-        self.assertTrue(
-            py.array_equal(get_class_cross_entropy(y, t),
-                           -py.log(py.array([[0.8, 0.5, 0.1],
-                                             [0.5, 0.8, 0.6]]))))
-
-        # N = 3, S = 2일 때
+        #  입력: 3 x 2 x 2
         y = py.array([[[0.8, 0.2],
                        [0.5, 0.5]],
 

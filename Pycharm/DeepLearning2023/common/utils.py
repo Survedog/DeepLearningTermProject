@@ -17,6 +17,14 @@ def sigmoid(values):
     return 1 / (1 + py.exp(-values))
 
 
+def softmax(values):
+    values = py.exp(values)
+    sum = py.sum(values, axis=-1)
+    sum = py.expand_dims(sum, axis=-1)
+
+    return values / sum
+
+
 def create_corpus_and_dict(text_list):
     """
     :param text_list: corpus를 만들 문장 리스트
@@ -62,22 +70,32 @@ def create_context_and_target(corpus):
 
 
 def get_one_hot_encoding(num, array_size):
-    encoded = py.zeros(array_size)
-    encoded[num] = 1
+    if isinstance(num, int):
+        encoded = py.zeros(array_size)
+        encoded[num] = 1
+    else:
+        encoded = py.zeros((num.shape[0], array_size))
+        encoded[range(num.shape[0]), num] = 1
     return encoded
 
 
 def get_class_cross_entropy(y, t):
     """
     분류 문제에서의 Cross Entropy
+    N: 배치 개수, S: 샘플 개수
     :param y: 각 클래스의 확률 (N x S x 클래스 수)
     :param t: 정답 클래스 레이블 (N x S)
     :return: Cross Entropy 손실 값 (N x S)
     """
+    original_t_shape = t.shape
+    if t.ndim == 1:
+        t = t.reshape((1, -1))
+    if y.ndim < 3:
+        y = y.reshape((1,) * (3 - y.ndim) + y.shape)
 
     batch_index = py.repeat(py.arange(t.shape[0]), t.shape[1]).reshape(t.shape)
     sample_index = py.resize(py.arange(t.shape[1]), t.shape)
-    return -py.log(y[batch_index, sample_index, t])
+    return (-py.log(y[batch_index, sample_index, t])).reshape(original_t_shape)
 
 
 def save_data(pickle_name, data):

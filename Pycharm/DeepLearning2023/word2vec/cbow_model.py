@@ -1,6 +1,6 @@
 from common.base_layer import LayerBase
 from word2vec.embedding_layer import EmbeddingLayer, EmbeddingDotLayer
-from word2vec.sigmoid_with_loss_layer import SigmoidWithLossLayer
+from common.loss_layers import SigmoidWithLossLayer
 from word2vec.negative_sampler import NegativeSampler
 from common.utils import py
 
