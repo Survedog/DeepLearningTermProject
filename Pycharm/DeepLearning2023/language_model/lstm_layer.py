@@ -14,7 +14,7 @@ class LSTMLayer(LayerBase):
         weight_x, weight_h, bias = self.params
         H = h_prev.shape[1]  # hidden_size
 
-        affine = py.matmul(weight_x, x) + py.matmul(weight_h, h_prev) + bias
+        affine = py.matmul(x, weight_x) + py.matmul(h_prev, weight_h) + bias
         f, g, i, o = affine[:, :H], affine[:, H:2*H], affine[:, 2*H:3*H], affine[:, 3*H:4*H]
 
         # todo: affine에 sigmoid 한번에 계산 시 시간 단축되는지 확인

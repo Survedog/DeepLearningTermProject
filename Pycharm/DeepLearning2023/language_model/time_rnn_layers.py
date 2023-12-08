@@ -1,11 +1,11 @@
 from base_layer import LayerBase
-from lstm_layer import LSTMLayer
+from language_model.lstm_layer import LSTMLayer
 from utils import py
 
 # todo: LSTM 이외의 다른 RNN 모델에도 대응 가능하도록 수정
 class TimeLSTMLayer(LayerBase):
 
-    def __init__(self, weight_x, weight_h, bias, stateful=True):
+    def __init__(self, weight_x, weight_h, bias, stateful=False):
         super().__init__()
         self.params += [weight_x, weight_h, bias]
         self.grads += [py.zeros_like(weight_x), py.zeros_like(weight_h), py.zeros_like(bias)]
