@@ -100,7 +100,7 @@ class UtilsTests(unittest.TestCase):
         self.assertTrue(py.array_equal(target, correct_target))
 
     def test_get_one_hot_encoding(self):
-        # 1차원 입력
+        # 정수 입력
         encoded = get_one_hot_encoding(2, 5)
         answer = py.array([0, 0, 1, 0, 0])
         self.assertTrue(py.array_equal(encoded, answer))
@@ -115,7 +115,7 @@ class UtilsTests(unittest.TestCase):
         answer[99] = 1
         self.assertTrue(py.array_equal(encoded, answer))
 
-        # 2차원 입력
+        # 1차원 입력
         nums = py.array([0, 8, 2])
         encoded = get_one_hot_encoding(nums, 10)
         answer = py.zeros((3, 10))

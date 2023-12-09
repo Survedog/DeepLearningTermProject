@@ -11,7 +11,11 @@ class LanguageModel(LayerBase):
     def __init__(self, vocab_size, wordvec_size, hidden_size, embed_weight=None):
         super().__init__()
 
-        load_embed_weight = embed_weight is not None
+        if embed_weight is None:
+            embed_weight = py.random.rand(vocab_size, wordvec_size)
+            load_embed_weight = False
+        else:
+            load_embed_weight = True
 
         lstm_weight_x = py.random.rand(wordvec_size, 4 * hidden_size)
         lstm_weight_h = py.random.rand(hidden_size, 4 * hidden_size)

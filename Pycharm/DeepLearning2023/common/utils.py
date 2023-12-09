@@ -166,7 +166,7 @@ def create_essay_corpus_and_dict(load_pickle=True, batch_size=100):
     return corpus, id_to_word, word_to_id
 
 
-def get_processed_essay_data(load_test_data, word_to_id, load_pickle=True, max_count=None, shuffle=False):
+def get_processed_essay_data(load_test_data, word_to_id, load_pickle=False, max_count=None, shuffle=False):
     pickle_name = 'processed_essay_data_' + ('test.p' if load_test_data else 'train.p')
     if load_pickle:
         eval_data_list = load_data(pickle_name)

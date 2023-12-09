@@ -1,5 +1,5 @@
 from common.base_layer import LayerBase
-from language_model.lstm_layer import LSTMLayer
+from lstm_layer import LSTMLayer
 from common.utils import py
 
 # todo: LSTM 이외의 다른 RNN 모델에도 대응 가능하도록 수정
