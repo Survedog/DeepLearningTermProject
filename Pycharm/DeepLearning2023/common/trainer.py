@@ -33,7 +33,7 @@ class Trainer:
                 epoch_total_loss += py.sum(loss)
                 loss_count += batch_size
 
-                dout = py.ones_like(answer_batch)
+                dout = py.ones(data_batch.shape[0])
                 self.model.backward(dout)
                 self.optimizer.update(self.model.params, self.model.grads)
 

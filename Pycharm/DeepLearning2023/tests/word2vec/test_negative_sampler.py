@@ -37,10 +37,22 @@ class EmbeddingLayerTests(unittest.TestCase):
         distribution = py.array([0.2, 0.2, 0.2, 0.2, 0.2])
         sampler = NegativeSampler(value_space, distribution)
 
+        # 긍정적 예가 1개일 때
         positive_idx_list = py.array([1, 0, 1, 2, 0, 3])
         samples, labels = sampler.get_mixed_samples_and_labels(sample_size, positive_idx_list)
 
         correct_labels = py.empty_like(samples)
-        for i, positive_idx in enumerate(positive_idx_list):
-            correct_labels[i] = (positive_idx == samples[i])
+        for i, positive_idxes in enumerate(positive_idx_list):
+            correct_labels[i] = (positive_idxes == samples[i])
+        self.assertTrue(py.array_equal(correct_labels, labels))
+
+        # 긍정적 예가 2개일 때
+        positive_idx_list = py.array([[1, 0],
+                                      [1, 2],
+                                      [0, 3]])
+        samples, labels = sampler.get_mixed_samples_and_labels(sample_size, positive_idx_list)
+
+        correct_labels = py.empty_like(samples, dtype=int)
+        for i, positive_idxes in enumerate(positive_idx_list):
+            correct_labels[i] = py.logical_or((positive_idxes[0] == samples[i]), (positive_idxes[1] == samples[i]))
         self.assertTrue(py.array_equal(correct_labels, labels))

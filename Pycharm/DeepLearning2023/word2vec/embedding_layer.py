@@ -35,9 +35,9 @@ class EmbeddingDotLayer(LayerBase):
 
     def forward(self, word_ids, h):
         """
-        :param word_ids: 단어 id 샘플 리스트의 배치 (N x S)
-        :param h: 내적할 은닉층 값의 배치 (N x H)
-        :return: 은닉층과 각 샘플의 내적 값의 배치 (N)
+        :param word_ids: 단어 id 샘플 리스트 (N x S)
+        :param h: 내적할 은닉층 값 (N x H)
+        :return: 은닉층과 각 샘플의 내적 값 (N x S)
         """
         embedded = self.embed_layer.forward(word_ids)
         h = py.expand_dims(h, axis=1)

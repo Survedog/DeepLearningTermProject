@@ -5,7 +5,7 @@ from word2vec.negative_sampler import NegativeSampler
 from common.utils import py
 
 
-class CBowModel(LayerBase):
+class SkipgramModel(LayerBase):
 
     def __init__(self, corpus, vocab_size, hidden_size, sample_size, weight_in, weight_out):
         super().__init__()
@@ -26,24 +26,18 @@ class CBowModel(LayerBase):
         self.grads.append(self.embed_in_layer.grads[0])
         self.grads.append(self.embed_dot_layer.grads[0])
 
-        self.default_params_pickle_name = 'cbow_params.p'
+        self.default_params_pickle_name = 'skipgram_params.p'
 
-    def calc_hidden(self, contexts):
-        self.context_size = contexts.shape[1]
-        embed_contexts = self.embed_in_layer.forward(contexts)
-        h = py.sum(embed_contexts, axis=1) / self.context_size
-        return h
-
-    def predict(self, contexts):
-        h = self.calc_hidden(contexts)
-        score = self.embed_dot_layer.forward(py.arange(self.vocab_size), h)
+    def predict(self, context):
+        embed_context = self.embed_in_layer.forward(context)
+        score = self.embed_dot_layer.forward(py.arange(self.vocab_size), embed_context)
         return py.argmax(score, axis=1)
 
-    def forward(self, contexts, true_target):
-        h = self.calc_hidden(contexts)
+    def forward(self, context, true_targets):
+        embed_context = self.embed_in_layer.forward(context)
 
-        samples, sample_labels = self.negative_sampler.get_mixed_samples_and_labels(self.sample_size, true_target)
-        sample_scores = self.embed_dot_layer.forward(samples, h)
+        samples, sample_labels = self.negative_sampler.get_mixed_samples_and_labels(self.sample_size, true_targets)
+        sample_scores = self.embed_dot_layer.forward(samples, embed_context)
 
         sample_loss = self.loss_layer.forward(sample_scores, sample_labels)
         avg_loss = py.average(sample_loss, axis=1)
@@ -53,8 +47,5 @@ class CBowModel(LayerBase):
         davg_loss = dout.reshape(-1, 1)
         dsample_loss = py.repeat(davg_loss, self.sample_size, axis=1) / self.sample_size
         dscore = self.loss_layer.backward(dsample_loss)
-        dh = self.embed_dot_layer.backward(dscore)
-
-        dembed_sum = dh / self.context_size
-        dembed_context = py.repeat(dembed_sum[:, py.newaxis, :], self.context_size, axis=1)
+        dembed_context = self.embed_dot_layer.backward(dscore)
         self.embed_in_layer.backward(dembed_context)

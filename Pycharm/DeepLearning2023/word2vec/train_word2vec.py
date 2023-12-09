@@ -1,5 +1,6 @@
 from common.utils import py, create_essay_corpus_and_dict, create_context_and_target
 from word2vec.cbow_model import CBowModel
+from word2vec.skipgram_model import SkipgramModel
 from common.adam_optimizer import AdamOptimizer
 from common.trainer import Trainer
 from config import Config
@@ -13,10 +14,11 @@ if __name__ == '__main__':
             corpus = py.array(corpus)
 
     print('Creating Context and targets...')
-    context, target = create_context_and_target(corpus[:1000000])
+    # context, target = create_context_and_target(corpus[:1000000])  # CBOW
+    target, context = create_context_and_target(corpus[:1000000])  # Skipgram
 
     # word2vec 설정
-    hidden_size = 100
+    hidden_size = 10
     sample_size = 1000
     vocab_size = len(id_to_word)
     weight_in = py.random.rand(vocab_size, hidden_size)
@@ -26,14 +28,15 @@ if __name__ == '__main__':
     learning_rate = 0.001
 
     # 트레이너 설정
-    max_epoch = 10
-    batch_size = 1000
+    max_epoch = 20
+    batch_size = 10000
     do_fitting = True
     continue_from_last_fit = False
-    save_params = False
+    save_params = True
 
     print('Creating model...')
-    word2vec = CBowModel(corpus, vocab_size, hidden_size, sample_size, weight_in, weight_out)
+    # word2vec = CBowModel(corpus, vocab_size, hidden_size, sample_size, weight_in, weight_out)
+    word2vec = SkipgramModel(corpus, vocab_size, hidden_size, sample_size, weight_in, weight_out)
     optimizer = AdamOptimizer(learning_rate)
     trainer = Trainer(word2vec, optimizer)
 
@@ -48,7 +51,7 @@ if __name__ == '__main__':
                     batch_size=batch_size,
                     max_epoch=max_epoch,
                     eval_interval=1)
-        trainer.plot_loss()
+        trainer.plot()
 
         if save_params:
             print('Saving params...')

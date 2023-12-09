@@ -49,14 +49,19 @@ class NegativeSampler:
         return negative_samples
 
     def get_mixed_samples_and_labels(self, sample_size, positive_idx_list):
-        negative_samples = self.get_negative_samples(sample_size - 1, positive_idx_list)
-        mixed_samples = py.hstack((positive_idx_list[py.newaxis].T, negative_samples))
+        if positive_idx_list.ndim == 1:
+            positive_idx_list = positive_idx_list.reshape(-1, 1)
 
-        if Config.USE_GPU:
-            positive_mask = py.repeat(positive_idx_list[py.newaxis].T, sample_size, axis=1)
-            labels = (mixed_samples == positive_mask).astype(int)
-        else:
-            labels = py.zeros_like(mixed_samples)
-            labels[:, 0] = 1
+        negative_samples = self.get_negative_samples(sample_size - positive_idx_list.shape[-1], positive_idx_list)
+        mixed_samples = py.hstack((positive_idx_list, negative_samples))
+
+        labels = py.zeros((positive_idx_list.shape[0], sample_size), dtype=int)
+        if Config.USE_GPU:  # 부정적/긍정적 샘플이 섞여 있음
+            for i in range(positive_idx_list.shape[-1]):
+                positive_mask = py.repeat(positive_idx_list[:, i][py.newaxis].T, sample_size, axis=-1)
+                labels = py.logical_or(labels, mixed_samples == positive_mask)
+            labels = labels.astype(int)
+        else:  # 부정적/긍정적 샘플이 분리되어 있음
+            labels[:, py.arange(positive_idx_list.shape[-1])] = 1
 
         return mixed_samples, labels
