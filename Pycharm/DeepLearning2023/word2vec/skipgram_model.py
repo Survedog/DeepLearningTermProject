@@ -33,14 +33,14 @@ class SkipgramModel(LayerBase):
         self.default_params_pickle_name = 'skipgram_params.p'
 
     def predict(self, context):
+        batch_size = context.shape[0]
+
         embed_context = self.embed_in_layer.forward(context)
+        scores = py.empty((batch_size, self.target_size, self.vocab_size), dtype='f')
+        for i in range(self.target_size):
+            scores[:, i, :] = self.embed_dot_layers[i].forward(py.arange(self.vocab_size), embed_context)
 
-        target_size = len(self.embed_dot_layers)
-        scores = py.empty((target_size, self.vocab_size), dtype='f')
-        for i in range(target_size):
-            scores[i] = self.embed_dot_layers[i].forward(py.arange(self.vocab_size), embed_context)
-
-        return py.argmax(scores, axis=1)
+        return py.argmax(scores, axis=2)
 
     def forward(self, context, true_targets):
         batch_size = context.shape[0]

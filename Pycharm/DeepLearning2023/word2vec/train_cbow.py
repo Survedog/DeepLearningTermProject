@@ -1,7 +1,6 @@
 import numpy
 from common.utils import py, create_essay_corpus_and_dict, create_context_and_target
 from word2vec.cbow_model import CBowModel
-from word2vec.skipgram_model import SkipgramModel
 from common.adam_optimizer import AdamOptimizer
 from common.trainer import Trainer
 from config import Config
@@ -15,11 +14,11 @@ if __name__ == '__main__':
             corpus = py.array(corpus)
 
     print('Creating Context and targets...')
-    context, target = create_context_and_target(corpus[:1000000])
+    context, target = create_context_and_target(corpus[:10000000])
 
     # word2vec 설정
     hidden_size = 50
-    sample_size = 1000
+    sample_size = 100
     vocab_size = len(id_to_word)
     weight_in = py.random.rand(vocab_size, hidden_size)
     weight_out = py.random.rand(vocab_size, hidden_size)
@@ -28,20 +27,20 @@ if __name__ == '__main__':
     learning_rate = 0.001
 
     # 트레이너 설정
-    max_epoch = 1
-    batch_size = 1000
+    max_epoch = 20
+    batch_size = 10000
     do_fitting = True
     continue_from_last_fit = False
     save_params = True
 
     print('Creating model...')
-    word2vec = CBowModel(corpus, vocab_size, hidden_size, sample_size, weight_in, weight_out)
+    model = CBowModel(corpus, vocab_size, hidden_size, sample_size, weight_in, weight_out)
     optimizer = AdamOptimizer(learning_rate)
-    trainer = Trainer(word2vec, optimizer)
+    trainer = Trainer(model, optimizer)
 
     if continue_from_last_fit or not do_fitting:
         print('Loading params...')
-        word2vec.load_params()
+        model.load_params()
 
     if do_fitting:
         print('Fitting model...')
@@ -54,7 +53,7 @@ if __name__ == '__main__':
 
         if save_params:
             print('Saving params...')
-            word2vec.save_params()
+            model.save_params()
 
     total_count = 100
     correct_count = 0
@@ -62,7 +61,7 @@ if __name__ == '__main__':
     rand_idx = py.random.permutation(py.arange(total_count))
     predict_context = context[rand_idx]
     predict_target = target[rand_idx]
-    prediction = word2vec.predict(predict_context)
+    prediction = model.predict(predict_context)
 
     if Config.USE_GPU:
         predict_context = py.asnumpy(predict_context)

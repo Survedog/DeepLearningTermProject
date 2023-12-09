@@ -7,15 +7,13 @@ class SkipgramModelTests(unittest.TestCase):
 
     def test_forward_and_backward(self):
         corpus, id_to_word, _ = create_corpus_and_dict('오늘은 이미 밥을 먹었습니다. 바로 초밥을 먹었습니다.')
-        targets, context = create_context_and_target(corpus)  # context와 target을 CBOW와 반대로 바꾼다.
+        targets, context = create_context_and_target(corpus)  # context와 target을 서로 뒤바꾼다.
 
         wordvec_size = 3
         vocab_size = len(id_to_word)
 
         weight_in = py.random.rand(vocab_size, wordvec_size)
-        weight_out_list = []
-        for i in range(targets.shape[-1]):
-            weight_out_list.append(py.random.rand(vocab_size, wordvec_size))
+        weight_out_list = [py.random.rand(vocab_size, wordvec_size) for _ in range(targets.shape[-1])]
 
         skipgram = SkipgramModel(corpus=corpus,
                                  vocab_size=vocab_size,
