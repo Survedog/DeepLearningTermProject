@@ -43,11 +43,11 @@ if __name__ == '__main__':
 
     if do_fitting:
         print('Fitting model...')
-        trainer.fit(train_data=context,
-                    answer=target,
+        trainer.fit(x=context,
+                    t=target,
                     batch_size=batch_size,
                     max_epoch=max_epoch,
-                    print_interval=1)
+                    eval_interval=1)
         trainer.plot_loss()
 
         if save_params:

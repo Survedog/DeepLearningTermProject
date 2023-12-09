@@ -1,7 +1,6 @@
 from matplotlib import pyplot as plt
 from config import Config
 from common.utils import py
-import numpy
 import time
 
 class Trainer:
@@ -9,57 +8,87 @@ class Trainer:
     def __init__(self, model, optimizer):
         self.model = model
         self.optimizer = optimizer
-        self.loss_list = None
+        self.eval_list = None  # eval: 모델의 평가치 (loss 등)
 
-    def fit(self, train_data, answer, batch_size=100, random_batch=True,
-            max_epoch=20, print_info=True, print_interval=1):
+    def fit(self, x, t, batch_size=100, random_batch=True,
+            max_epoch=20, print_info=True, eval_interval=1):
 
-        iters_per_epoch = int(py.ceil(train_data.shape[0] / batch_size))
-        self.loss_list = []
+        iters_per_epoch = int(py.ceil(x.shape[0] / batch_size))
+        self.eval_list = []
 
         for epoch in range(1, max_epoch + 1):
             epoch_total_loss = 0.0
             loss_count = 0
 
             if random_batch:
-                rand_idx = py.random.permutation(py.arange(len(train_data)))
-                train_data = train_data[rand_idx]
-                answer = answer[rand_idx]
+                rand_idx = py.random.permutation(py.arange(len(x)))
+                x = x[rand_idx]
+                t = t[rand_idx]
 
             for iteration in range(1, iters_per_epoch + 1):
                 start = time.time()
-                batch_start = (iteration - 1) * batch_size
-                batch_end = min(iteration * batch_size, train_data.shape[0])
+                data_batch, answer_batch = self.get_batch(batch_size, iteration, x, t)
 
-                data_batch = train_data[batch_start:batch_end]
-                answer_batch = answer[batch_start:batch_end]
                 loss = self.model.forward(data_batch, answer_batch)
+                epoch_total_loss += py.sum(loss)
+                loss_count += batch_size
 
-                epoch_total_loss += py.sum(loss) / batch_size
-                loss_count += 1
-
-                dout = py.ones(batch_end - batch_start)
+                dout = py.ones_like(answer_batch)
                 self.model.backward(dout)
                 self.optimizer.update(self.model.params, self.model.grads)
 
                 if print_info:
-                    print('[Trainer] Epoch[%d/%d] - Iteration[%d/%d] - 경과 시간: %.2fs' % (epoch, max_epoch, iteration, iters_per_epoch, time.time() - start))
+                    print('[Trainer] Epoch[%d/%d] - Iteration[%d/%d] - 경과 시간: %.2fs' %
+                          (epoch, max_epoch, iteration, iters_per_epoch, time.time() - start))
 
-            if print_info and (epoch % print_interval) == 0:
-                avg_loss = epoch_total_loss / loss_count
-                print('[Trainer] Epoch %d - 평균 손실: %.3f' % (epoch, avg_loss))
+            if print_info and (epoch % eval_interval) == 0:
+                self.eval_model(epoch, epoch_total_loss, loss_count)
 
-                self.loss_list.append(avg_loss.get() if Config.USE_GPU else avg_loss)
+        self.print_final_eval()
 
-        print('[Trainer] 최종 손실: %.3f' % (self.loss_list[-1]))
+    def get_batch(self, batch_size, iteration, train_data, answer):
+        batch_start = (iteration - 1) * batch_size
+        batch_end = min(iteration * batch_size, train_data.shape[0])
 
-    def plot_loss(self):
-        y = self.loss_list
-        x = numpy.arange(len(y))
+        data_batch = train_data[batch_start:batch_end]
+        answer_batch = answer[batch_start:batch_end]
+        loss = self.model.forward(data_batch, answer_batch)
+        return data_batch, answer_batch
+
+    def eval_model(self, epoch, epoch_total_loss, loss_count):
+        avg_loss = epoch_total_loss / loss_count
+        print('[Trainer] Epoch %d - 평균 손실: %.3f' % (epoch, avg_loss))
+        self.eval_list.append(avg_loss.get() if Config.USE_GPU else avg_loss)
+
+    def print_final_eval(self):
+        print('[Trainer] 최종 손실: %.3f' % (self.eval_list[-1]))
+
+    def plot(self, xlabel='epoch', ylabel='loss', title='Train Loss'):
+        y = self.eval_list
+        x = py.arange(len(y))
 
         plt.plot(x, y, '.')
-        plt.xlabel('epoch')
-        plt.ylabel('loss')
-        plt.title('CBow Train Loss')
+        plt.xlabel(xlabel)
+        plt.ylabel(ylabel)
+        plt.title(title)
         plt.show()
 
+
+class RnnTrainer(Trainer):
+
+    def __init__(self, model, optimizer):
+        super().__init__(model, optimizer)
+
+    def get_batch(self, batch_size, iteration, train_data, answer):
+        data_batch = train_data[batch_start:batch_end]
+        answer_batch = answer[batch_start:batch_end]
+        loss = self.model.forward(data_batch, answer_batch)
+        return data_batch, answer_batch
+
+    def eval_model(self, epoch, epoch_total_loss, loss_count):
+        avg_loss = epoch_total_loss / loss_count
+        print('[Trainer] Epoch %d - 평균 퍼플렉서티: %.3f' % (epoch, avg_loss))
+        self.eval_list.append(avg_loss.get() if Config.USE_GPU else avg_loss)
+
+    def print_final_eval(self):
+        print('[Trainer] 최종 퍼플렉서티: %.3f' % (self.eval_list[-1]))

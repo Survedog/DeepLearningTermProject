@@ -31,11 +31,11 @@ class TrainerTests(unittest.TestCase):
         optimizer = AdamOptimizer(learning_rate)
         trainer = Trainer(word2vec, optimizer)
 
-        trainer.fit(train_data=context,
-                    answer=target,
+        trainer.fit(x=context,
+                    t=target,
                     batch_size=batch_size,
                     max_epoch=max_epoch,
-                    print_interval=100)
+                    eval_interval=100)
 
         prediction = word2vec.predict(context)
 
