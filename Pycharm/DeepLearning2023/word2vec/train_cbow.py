@@ -29,9 +29,9 @@ if __name__ == '__main__':
     # 트레이너 설정
     max_epoch = 5
     batch_size = 10000
-    do_fitting = True
+    do_fitting = False
     continue_from_last_fit = True
-    save_params = True
+    save_params = False
 
     print('Creating model...')
     model = CBowModel(corpus, vocab_size, hidden_size, sample_size, weight_in, weight_out)
@@ -55,24 +55,30 @@ if __name__ == '__main__':
             print('Saving params...')
             model.save_params()
 
-    total_count = 100
-    correct_count = 0
+    eval_max_iter = 100
+    total_correct_count = 0
+    question_per_iter = 100
 
-    rand_idx = py.random.permutation(py.arange(total_count))
-    predict_context = context[rand_idx]
-    predict_target = target[rand_idx]
-    prediction = model.predict(predict_context)
+    for _ in range(eval_max_iter):
+        rand_idx = py.random.permutation(py.arange(question_per_iter))
+        predict_context = context[rand_idx]
+        predict_target = target[rand_idx]
+        prediction = model.predict(predict_context)
 
-    if Config.USE_GPU:
-        predict_context = py.asnumpy(predict_context)
-        predict_target = py.asnumpy(predict_target)
-        prediction = py.asnumpy(prediction)
+        if Config.USE_GPU:
+            predict_context = py.asnumpy(predict_context)
+            predict_target = py.asnumpy(predict_target)
+            prediction = py.asnumpy(prediction)
 
-    for i in range(len(predict_context)):
-        if numpy.array_equal(predict_target[i], prediction[i]):
-            correct_count += 1
-        print('문맥: %s/%s\t\t| 예측/정답: %s/%s' %
-              (id_to_word[predict_context[i, 0]], id_to_word[predict_context[i, 1]],
-               id_to_word[prediction[i]], id_to_word[predict_target[i]]))
+        correct_count = 0
+        for i in range(len(predict_context)):
+            if numpy.array_equal(predict_target[i], prediction[i]):
+                correct_count += 1
+            print('문맥: %s/%s\t\t| 예측/정답: %s/%s' %
+                  (id_to_word[predict_context[i, 0]], id_to_word[predict_context[i, 1]],
+                   id_to_word[prediction[i]], id_to_word[predict_target[i]]))
 
-    print('정답율: %.1f' % (correct_count * 100 / total_count))
+        print('정답율: %.1f' % (correct_count * 100 / question_per_iter))
+        total_correct_count += correct_count
+
+    print('최종 정답율: %.1f' % (total_correct_count * 100 / (question_per_iter * eval_max_iter)))

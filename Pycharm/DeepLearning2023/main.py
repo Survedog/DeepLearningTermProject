@@ -9,5 +9,5 @@ if __name__ == '__main__':
         id_to_word[unknown_id] = '<UNK>'
         word_to_id['<UNK>'] = unknown_id
 
-    essay_data = get_processed_essay_data(load_test_data=False, word_to_id=word_to_id, max_count=10000)
+    essay_data = get_processed_essay_data(load_test_data=False, word_to_id=word_to_id, max_count=None)
     model = EssayEvalModel()

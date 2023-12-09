@@ -1,5 +1,5 @@
 import random
-
+import traceback
 from config import Config
 from konlpy.tag import Komoran, Kkma
 from pathlib import Path
@@ -183,7 +183,11 @@ def get_processed_essay_data(load_test_data, word_to_id, load_pickle=True, max_c
     if max_count is not None:
         raw_data_list = raw_data_list[:max_count]
 
+    data_num = 0
     for raw_data in raw_data_list:
+        data_num += 1
+        print('[DATA PROCESS] processing essay data no.%d...' % data_num)
+
         eval_data = {}
         eval_data['type'] = essay_type[raw_data['info']['essay_type']]
         eval_data['corr_count'] = len(raw_data['correction'])
@@ -200,8 +204,13 @@ def get_processed_essay_data(load_test_data, word_to_id, load_pickle=True, max_c
         eval_data['paragraph'] = []
         for paragraph in raw_data['paragraph']:
             #todo: #@문장구분# 처리
-            words = paragraph['paragraph_txt']
-            parsed_words = text_parser.morphs(words)
+            words = paragraph['paragraph_txt'].replace('\n', '').replace('\r', '').replace('\t', '')
+            try:
+                parsed_words = text_parser.morphs(words)
+            except Exception:
+                print('[DATA PROCESS] error parsing data %d.\n%s' % (data_num, traceback.format_exc()))
+                eval_data['paragraph'].append(None)
+                continue
 
             word_ids = []
             for parsed_word in parsed_words:
