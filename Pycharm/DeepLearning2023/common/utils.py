@@ -1,5 +1,7 @@
+import random
+
 from config import Config
-from konlpy.tag import Komoran
+from konlpy.tag import Komoran, Kkma
 from pathlib import Path
 import json
 import pickle
@@ -12,7 +14,7 @@ else:
     import numpy as py
 
 text_parser = Komoran()
-
+# text_parser = Kkma()
 
 def sigmoid(values):
     return 1 / (1 + py.exp(-values))
@@ -54,6 +56,10 @@ def create_corpus_and_dict(text_list):
                 id_count += 1
 
             corpus.append(word_to_id[word])
+
+    unknown_token_id = len(word_to_id)
+    word_to_id['<UNK>'] = unknown_token_id
+    id_to_word[unknown_token_id] = '<UNK>'
 
     return py.array(corpus), id_to_word, word_to_id
 
@@ -158,3 +164,51 @@ def create_essay_corpus_and_dict(load_pickle=True, batch_size=100):
     corpus, id_to_word, word_to_id = create_corpus_and_dict(text_list)
     save_data(pickle_name, (corpus, id_to_word, word_to_id))
     return corpus, id_to_word, word_to_id
+
+
+def get_processed_essay_data(load_test_data, word_to_id, load_pickle=True, max_count=None, shuffle=False):
+    pickle_name = 'processed_essay_data_' + ('test.p' if load_test_data else 'train.p')
+    if load_pickle:
+        eval_data_list = load_data(pickle_name)
+        if eval_data_list is not None:
+            return eval_data_list
+
+    eval_data_list = []
+    raw_data_list = load_essay_data_list(load_test_data=load_test_data)
+    essay_type = {'글짓기': 0, '설명글': 0, '주장': 1, '찬성반대': 1, '대안제시': 1}
+    unknown_token_id = len(word_to_id) - 1
+
+    if shuffle:
+        random.shuffle(raw_data_list)
+    if max_count is not None:
+        raw_data_list = raw_data_list[:max_count]
+
+    for raw_data in raw_data_list:
+        eval_data = {}
+        eval_data['type'] = essay_type[raw_data['info']['essay_type']]
+        eval_data['corr_count'] = len(raw_data['correction'])
+
+        score_detail = raw_data['score']['essay_scoreT_detail']
+        eval_data['score'] = {'org': score_detail['essay_scoreT_org'],
+                              'cont': score_detail['essay_scoreT_cont'],
+                              'exp': score_detail['essay_scoreT_exp']}
+
+        eval_data['weight'] = {'org': raw_data['rubric']['organization_weight'],
+                               'cont': raw_data['rubric']['content_weight'],
+                               'exp': raw_data['rubric']['expression_weight']}
+
+        eval_data['paragraph'] = []
+        for paragraph in raw_data['paragraph']:
+            #todo: #@문장구분# 처리
+            words = paragraph['paragraph_txt']
+            parsed_words = text_parser.morphs(words)
+
+            word_ids = []
+            for parsed_word in parsed_words:
+                word_ids.append(word_to_id.get(parsed_word, unknown_token_id))
+            eval_data['paragraph'].append(word_ids)
+
+        eval_data_list.append(eval_data)
+
+    save_data(pickle_name, eval_data_list)
+    return eval_data_list

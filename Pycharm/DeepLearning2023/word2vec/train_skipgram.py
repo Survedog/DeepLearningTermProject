@@ -17,8 +17,8 @@ if __name__ == '__main__':
     target, context = create_context_and_target(corpus[:10000000])
 
     # word2vec 설정
-    wordvec_size = 10
-    sample_size = 10
+    wordvec_size = 100
+    sample_size = 50
     vocab_size = len(id_to_word)
     weight_in = py.random.rand(vocab_size, wordvec_size)
     weight_out_list = [py.random.rand(vocab_size, wordvec_size) for _ in range(target.shape[-1])]
@@ -27,10 +27,10 @@ if __name__ == '__main__':
     learning_rate = 0.001
 
     # 트레이너 설정
-    max_epoch = 10
-    batch_size = 10000
+    max_epoch = 8
+    batch_size = 30000
     do_fitting = True
-    continue_from_last_fit = False
+    continue_from_last_fit = True
     save_params = True
 
     print('Creating model...')
