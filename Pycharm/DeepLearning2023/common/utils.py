@@ -7,6 +7,7 @@ import numpy
 
 if Config.USE_GPU:
     import cupy as py
+    py.cuda.set_allocator(py.cuda.MemoryPool().malloc)
 else:
     import numpy as py
 

@@ -67,6 +67,9 @@ class Trainer:
         y = self.eval_list
         x = py.arange(len(y))
 
+        if Config.USE_GPU:
+            x = py.asnumpy(x)
+
         plt.plot(x, y, '.')
         plt.xlabel(xlabel)
         plt.ylabel(ylabel)

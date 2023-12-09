@@ -52,7 +52,7 @@ class EmbeddingLayerTests(unittest.TestCase):
                                       [0, 3]])
         samples, labels = sampler.get_mixed_samples_and_labels(sample_size, positive_idx_list)
 
-        correct_labels = py.empty_like(samples, dtype=int)
-        for i, positive_idxes in enumerate(positive_idx_list):
-            correct_labels[i] = py.logical_or((positive_idxes[0] == samples[i]), (positive_idxes[1] == samples[i]))
+        correct_labels = py.empty((2,) + samples.shape, dtype=int)
+        correct_labels[0] = (positive_idx_list[:, 0].reshape(-1, 1) == samples)
+        correct_labels[1] = (positive_idx_list[:, 1].reshape(-1, 1) == samples)
         self.assertTrue(py.array_equal(correct_labels, labels))

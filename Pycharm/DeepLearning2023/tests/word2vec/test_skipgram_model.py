@@ -9,22 +9,30 @@ class SkipgramModelTests(unittest.TestCase):
         corpus, id_to_word, _ = create_corpus_and_dict('오늘은 이미 밥을 먹었습니다. 바로 초밥을 먹었습니다.')
         targets, context = create_context_and_target(corpus)  # context와 target을 CBOW와 반대로 바꾼다.
 
-        hidden_size = 3
+        wordvec_size = 3
         vocab_size = len(id_to_word)
-        weight_in = py.random.rand(vocab_size, hidden_size)
-        weight_out = py.random.rand(vocab_size, hidden_size)
+
+        weight_in = py.random.rand(vocab_size, wordvec_size)
+        weight_out_list = []
+        for i in range(targets.shape[-1]):
+            weight_out_list.append(py.random.rand(vocab_size, wordvec_size))
 
         skipgram = SkipgramModel(corpus=corpus,
                                  vocab_size=vocab_size,
-                                 hidden_size=hidden_size,
+                                 wordvec_size=wordvec_size,
                                  sample_size=5,
                                  weight_in=weight_in,
-                                 weight_out=weight_out)
+                                 weight_out_list=weight_out_list)
 
         skipgram.forward(context[0:1], targets[0:1])
         dout = py.ones(1)
         skipgram.backward(dout)
-        dWin, dWout = skipgram.grads[0], skipgram.grads[1]
+        dWin, *dWout_list = skipgram.grads
+
+        # 형상 일치 확인
+        self.assertEqual(dWin.shape, weight_in.shape)
+        for i in range(targets.shape[-1]):
+            self.assertEqual(dWout_list[i].shape, weight_out_list[i].shape)
 
         # dWin에서 입력 문맥의 기울기만 갱신되는지 확인
         dWin_sum = py.sum(dWin, axis=1)
@@ -37,11 +45,12 @@ class SkipgramModelTests(unittest.TestCase):
         skipgram.forward(context[0:3], targets[0:3])
         dout = py.ones(3)
         skipgram.backward(dout)
-        dWin, dWout = skipgram.grads[0], skipgram.grads[1]
+        dWin, *dWout_list = skipgram.grads
 
         # 형상 일치 확인
         self.assertEqual(dWin.shape, weight_in.shape)
-        self.assertEqual(dWout.shape, weight_out.shape)
+        for i in range(targets.shape[-1]):
+            self.assertEqual(dWout_list[i].shape, weight_out_list[i].shape)
 
         # dWin에서 입력한 배치 내 문맥들의 기울기만 갱신되는지 확인
         dWin_sum = py.sum(dWin, axis=1)

@@ -1,3 +1,4 @@
+import numpy
 from common.utils import py, create_essay_corpus_and_dict, create_context_and_target
 from word2vec.cbow_model import CBowModel
 from word2vec.skipgram_model import SkipgramModel
@@ -14,11 +15,10 @@ if __name__ == '__main__':
             corpus = py.array(corpus)
 
     print('Creating Context and targets...')
-    # context, target = create_context_and_target(corpus[:1000000])  # CBOW
-    target, context = create_context_and_target(corpus[:1000000])  # Skipgram
+    context, target = create_context_and_target(corpus[:1000000])
 
     # word2vec 설정
-    hidden_size = 10
+    hidden_size = 50
     sample_size = 1000
     vocab_size = len(id_to_word)
     weight_in = py.random.rand(vocab_size, hidden_size)
@@ -28,15 +28,14 @@ if __name__ == '__main__':
     learning_rate = 0.001
 
     # 트레이너 설정
-    max_epoch = 20
-    batch_size = 10000
+    max_epoch = 1
+    batch_size = 1000
     do_fitting = True
     continue_from_last_fit = False
     save_params = True
 
     print('Creating model...')
-    # word2vec = CBowModel(corpus, vocab_size, hidden_size, sample_size, weight_in, weight_out)
-    word2vec = SkipgramModel(corpus, vocab_size, hidden_size, sample_size, weight_in, weight_out)
+    word2vec = CBowModel(corpus, vocab_size, hidden_size, sample_size, weight_in, weight_out)
     optimizer = AdamOptimizer(learning_rate)
     trainer = Trainer(word2vec, optimizer)
 
@@ -71,7 +70,7 @@ if __name__ == '__main__':
         prediction = py.asnumpy(prediction)
 
     for i in range(len(predict_context)):
-        if (predict_target[i] == prediction[i]):
+        if numpy.array_equal(predict_target[i], prediction[i]):
             correct_count += 1
         print('문맥: %s/%s\t\t| 예측/정답: %s/%s' %
               (id_to_word[predict_context[i, 0]], id_to_word[predict_context[i, 1]],
