@@ -48,3 +48,6 @@ class LanguageModel(LayerBase):
         for layer in reversed(self.layers):
             dout = layer.backward(dout)
         return dout
+
+    def reset_state(self):
+        self.layers[1].reset_state()

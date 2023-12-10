@@ -68,3 +68,7 @@ class TimeLSTMLayer(LayerBase):
     def set_state(self, h, c):
         self.h = h
         self.c = c
+
+    def reset_state(self):
+        self.h = None
+        self.c = None
