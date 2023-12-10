@@ -1,6 +1,7 @@
 from matplotlib import pyplot as plt
 from config import Config
 from common.utils import py
+from math import ceil
 import time
 
 class Trainer:
@@ -13,7 +14,7 @@ class Trainer:
     def fit(self, x, t, batch_size=100, random_batch=True,
             max_epoch=20, print_info=True, eval_interval=1):
 
-        iters_per_epoch = int(py.ceil(len(x) / batch_size))
+        iters_per_epoch = int(ceil(len(x) / batch_size))
         self.loss_list = []
 
         for epoch in range(1, max_epoch + 1):
@@ -74,7 +75,7 @@ class Trainer:
         plt.show()
 
 
-class RnnTrainer:
+class RnnlmTrainer:
 
     def __init__(self, model, optimizer):
         self.model = model
@@ -84,13 +85,14 @@ class RnnTrainer:
 
     def fit(self, xs, ts, time_size, batch_size=100, max_epoch=20, print_info=True, eval_interval=1):
         data_size = len(xs)
-        iters_per_epoch = py.ceil(data_size / (time_size * batch_size))
+        iters_per_epoch = ceil(data_size / (time_size * batch_size))
         self.perplexity_list = []
 
         for epoch in range(1, max_epoch + 1):
             self.time_idx = 0
             epoch_total_loss = 0.0
             epoch_loss_count = 0
+            self.model.reset_state()
 
             for iteration in range(1, iters_per_epoch + 1):
                 start = time.time()
@@ -100,8 +102,7 @@ class RnnTrainer:
                 epoch_total_loss += py.sum(loss)
                 epoch_loss_count += len(xs_batch)
 
-                dout = py.ones(len(xs_batch))
-                self.model.backward(dout)
+                self.model.backward()
                 self.optimizer.update(self.model.params, self.model.grads)
 
                 if print_info:
@@ -132,8 +133,9 @@ class RnnTrainer:
                 xs_batch[i] = xs[start:end]
                 ts_batch[i] = ts[start:end]
             else:
-                xs_batch[i] = py.concatenate(xs[:end], xs[start:])
-                ts_batch[i] = py.concatenate(ts[:end], ts[start:])
+                xs_batch[i] = py.hstack((xs[:end], xs[start:]))
+                ts_batch[i] = py.hstack((ts[:end], ts[start:]))
+
         self.time_idx += time_size
 
         return xs_batch, ts_batch

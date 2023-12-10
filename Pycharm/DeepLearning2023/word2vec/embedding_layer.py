@@ -9,7 +9,6 @@ class EmbeddingLayer(LayerBase):
         self.params.append(weight)
         self.grads.append(py.zeros_like(weight))
         self.word_ids = None
-        pass
 
     def forward(self, word_ids):
         self.word_ids = word_ids
@@ -21,7 +20,6 @@ class EmbeddingLayer(LayerBase):
         dWeight[...] = 0
 
         py.add.at(dWeight, self.word_ids, dout)
-        return dWeight
 
 
 class EmbeddingDotLayer(LayerBase):

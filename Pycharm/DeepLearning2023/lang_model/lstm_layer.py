@@ -47,7 +47,7 @@ class LSTMLayer(LayerBase):
 
         dweight_x[...] = py.matmul(x.T, daffine)
         dweight_h[...] = py.matmul(h_prev.T, daffine)
-        dbias[...] = py.sum(daffine, axis=0)
+        dbias[...] = daffine.sum(axis=0)
 
         dh_prev = py.matmul(daffine, weight_h.T)
         dx = py.matmul(daffine, weight_x.T)

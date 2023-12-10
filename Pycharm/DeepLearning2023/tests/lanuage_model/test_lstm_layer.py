@@ -1,6 +1,6 @@
 import unittest
 import traceback
-from language_model.lstm_layer import LSTMLayer
+from lang_model.lstm_layer import LSTMLayer
 from common.utils import py
 
 

@@ -1,6 +1,6 @@
 import unittest
 import traceback
-from language_model.time_rnn_layers import *
+from lang_model.time_rnn_layers import *
 
 
 class TimeLSTMLayerTests(unittest.TestCase):

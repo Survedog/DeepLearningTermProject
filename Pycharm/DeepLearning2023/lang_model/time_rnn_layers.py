@@ -1,5 +1,5 @@
 from common.base_layer import LayerBase
-from lstm_layer import LSTMLayer
+from lang_model.lstm_layer import LSTMLayer
 from common.utils import py
 
 # todo: LSTM 이외의 다른 RNN 모델에도 대응 가능하도록 수정
@@ -18,6 +18,9 @@ class TimeLSTMLayer(LayerBase):
         self.layers = None
 
     def forward(self, xs):
+        if xs.ndim < 3:
+            xs = xs.reshape((1,) + xs.shape)
+
         batch_size, time_size, _ = xs.shape
         hidden_size = self.params[1].shape[0]
 
@@ -37,11 +40,15 @@ class TimeLSTMLayer(LayerBase):
 
         return hs
 
+    # todo: 기울기 소실/폭발 해결
     def backward(self, dhs):
         """
         :param dhs: 깊이 방향으로 출력된 h들의 열 hs에 대한 손실의 미분
         :return: dxs: 입력된 형태소 열 xs에 대한 손실의 미분
         """
+        if dhs.ndim < 3:
+            dhs = dhs.reshape((1,) + dhs.shape)
+
         batch_size, time_size, hidden_size = dhs.shape
         vocab_size = self.params[0].shape[0]
 
