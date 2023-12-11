@@ -10,6 +10,9 @@ if __name__ == '__main__':
     _, id_to_word, word_to_id = create_essay_corpus_and_dict(load_pickle=True)
 
     do_fitting = False
+    load_saved_param = True
+    save_param = False
+
     vocab_size = len(id_to_word)
     wordvec_size = 100
     hidden_size = 100
@@ -24,13 +27,16 @@ if __name__ == '__main__':
     optimizer = AdamOptimizer()
     trainer = RnnlmTrainer(model, optimizer)
 
+    if load_saved_param:
+        model.load_params()
+
     # 학습
     if do_fitting:
         print('Loading train data...')
         train_data_list = get_processed_essay_data(load_test_data=False,
                                                    word_to_id=word_to_id,
                                                    load_pickle=True)
-        train_data_list = train_data_list[:1000]
+        train_data_list = train_data_list[1000:3000]
         train_count = 0
 
         for train_data in train_data_list:
@@ -46,9 +52,8 @@ if __name__ == '__main__':
                         max_epoch=10)
             print('%d번 데이터 학습 완료.' % train_count)
 
-        model.save_params()
-    else:
-        model.load_params()
+        if save_param:
+            model.save_params()
 
     # 평가
     test_time_size = 50
