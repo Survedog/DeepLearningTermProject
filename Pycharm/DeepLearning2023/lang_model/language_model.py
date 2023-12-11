@@ -33,6 +33,8 @@ class LanguageModel(LayerBase):
             self.params += self.layers[i].params
             self.grads += self.layers[i].grads
 
+        self.default_params_pickle_name = 'lm_params.p'
+
     def predict(self, xs):
         for layer in self.layers:
             xs = layer.forward(xs)

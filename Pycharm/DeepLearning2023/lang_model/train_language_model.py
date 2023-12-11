@@ -26,8 +26,12 @@ if __name__ == '__main__':
     trainer = RnnlmTrainer(model, optimizer)
 
     # 학습
-    for test_data in train_data_list:
-        essay_corpus = py.array(sum(test_data['paragraph'], []))
+    train_count = 0
+
+    for train_data in train_data_list:
+        train_count += 1
+
+        essay_corpus = py.array(sum(train_data['paragraph'], []))
         xs = essay_corpus[:-1]
         ts = essay_corpus[1:]
 
@@ -35,13 +39,16 @@ if __name__ == '__main__':
                     time_size=min(time_size, len(xs)),
                     batch_size=batch_size,
                     max_epoch=10)
+        print('%d번 데이터 학습 완료.' % train_count)
+
+    model.save_params()
 
     # 평가
     test_data_list = get_processed_essay_data(load_test_data=True,
                                               word_to_id=word_to_id,
                                               load_pickle=True)
     random.shuffle(test_data_list)
-    test_data_list = test_data_list[:1000]
+    test_data_list = test_data_list[:100]
 
     total_loss = 0
     for test_data in test_data_list:
@@ -54,4 +61,3 @@ if __name__ == '__main__':
 
     perplexity = py.exp(total_loss / len(test_data_list))
     print('Test perplexity: %0.2f' % perplexity)
-
