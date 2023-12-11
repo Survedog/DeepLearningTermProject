@@ -29,7 +29,6 @@ class EssayEvalModel(LayerBase):
                          py.array([cont_weight['con'], cont_weight['con_clearance'], cont_weight['con_novelty'], cont_weight['con_prompt'], cont_weight['con_description']]),
                          py.array([exp_weight['exp'], exp_weight['exp_grammar'], exp_weight['exp_vocab'], exp_weight['exp_style']], data['corr_count'])]
 
-
         t = []
         for score_list in data['score']:
             t += sum(score_list, [])
@@ -42,6 +41,7 @@ class EssayEvalModel(LayerBase):
 
     def __init__(self, rnn_model, fit_premade_models=False):
         super().__init__()
+        self.cache = None
 
         exp_affine_weight = py.random.randn()
         exp_affine_bias = py.random.randn()
@@ -67,18 +67,20 @@ class EssayEvalModel(LayerBase):
             self.params += layer.params
             self.grads += layer.grads
 
+
     def predict(self, xs, score_metrics):
         hs = self.rnn_model.predict(xs)
-        hs = hs.flatten()
+        fhs = hs.flatten()
 
-        org_x = py.hstack((hs, score_metrics[0]))
-        cont_x = py.hstack((hs, score_metrics[1]))
-        exp_x = py.hstack((hs, score_metrics[2]))
+        org_x = py.hstack((fhs, score_metrics[0]))
+        cont_x = py.hstack((fhs, score_metrics[1]))
+        exp_x = py.hstack((fhs, score_metrics[2]))
 
         org_scores = self.org_affine_layer.forward(org_x)
         cont_scores = self.cont_affine_layer.forward(cont_x)
         exp_scores = self.exp_affine_layer.forward(exp_x)
 
+        self.cache = (hs.shape, fhs.shape[-1])
         return org_scores, cont_scores, exp_scores
 
     def forward(self, xs, score_weights, t):
@@ -86,8 +88,18 @@ class EssayEvalModel(LayerBase):
         loss = self.loss_layer.forward(scores, t)
         return loss
 
-    def backward(self):
-        pass
+    def backward(self, dout=1):
+        hs_shape, fhs_len = self.cache
+
+        dscore = self.loss_layer.backward(dout)
+
+        dhs = py.zeros(fhs_len, dtype='f')
+        dhs += self.exp_affine_layer.backward(dscore)[:fhs_len]
+        dhs += self.cont_affine_layer.backward(dscore)[:fhs_len]
+        dhs += self.org_affine_layer.backward(dscore)[:fhs_len]
+
+        dhs = dhs.reshape(hs_shape)
+        self.rnn_model.backward(dhs)
 
     def reset_state(self):
         self.rnn_model.reset_state()
