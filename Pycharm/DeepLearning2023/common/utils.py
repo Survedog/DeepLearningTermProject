@@ -227,6 +227,12 @@ def get_processed_essay_data(load_test_data, word_to_id, load_pickle=False, max_
     return eval_data_list
 
 def get_ndarray_index(num):
+    """
+    :param num: numpy/cupy 배열
+    :return: 각 원소에 접근하기 위한 각 차원의 인덱스들의 튜플
+    ex) num = py.array([[5, 4, 3], [3, 4, 5]])
+        return = ([0, 0, 0, 1, 1, 1], [0, 1, 2, 0, 1, 2])
+    """
     index = []
     left = 1  # 각 차원의 상위 차원 개수
     for s in num.shape:
