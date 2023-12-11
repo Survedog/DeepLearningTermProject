@@ -18,10 +18,7 @@ class LSTMLayer(LayerBase):
         f, g, i, o = affine[:, :H], affine[:, H:2*H], affine[:, 2*H:3*H], affine[:, 3*H:4*H]
 
         # todo: affine에 sigmoid 한번에 계산 시 시간 단축되는지 확인
-        f = sigmoid(f)
-        i = sigmoid(i)
-        o = sigmoid(o)
-        g = py.tanh(g)
+        f, i, o, g = sigmoid(f), sigmoid(i), sigmoid(o), py.tanh(g)
 
         c = c_prev * f + g * i
         tanh_c = py.tanh(c)

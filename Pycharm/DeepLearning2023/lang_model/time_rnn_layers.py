@@ -53,8 +53,8 @@ class TimeLSTMLayer(LayerBase):
         vocab_size = self.params[0].shape[0]
 
         # 마지막 RNN 모델은 깊이 방향으로만 손실에 관여하므로 0을 넣는다.
-        dh = py.zeros((batch_size, hidden_size))
-        dc = py.zeros((batch_size, hidden_size))
+        dh = py.zeros((batch_size, hidden_size), dtype='f')
+        dc = py.zeros((batch_size, hidden_size), dtype='f')
 
         dxs = py.empty((batch_size, time_size, vocab_size))
 
