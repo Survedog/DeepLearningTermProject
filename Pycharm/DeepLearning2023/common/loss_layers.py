@@ -35,6 +35,6 @@ class SoftmaxWithLossLayer(LayerBase):
 
     def backward(self, dout=1):
         y, t = self.cache
-        t = get_one_hot_encoding(t, y.shape[1])
+        t = get_one_hot_encoding(t, y.shape[-1])
         dx = (y - t) * dout
         return dx
