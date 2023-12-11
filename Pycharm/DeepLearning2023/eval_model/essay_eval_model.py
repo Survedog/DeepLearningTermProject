@@ -10,7 +10,10 @@ class EssayEvalModel(LayerBase):
         self.embed_in_layer = EmbeddingLayer(embed_weight)
         self.rnn_model = rnn_model
 
-    def forward(self, x):
+    def predict(self, x):
+        pass
+
+    def forward(self, x, t):
         pass
 
     def backward(self):
