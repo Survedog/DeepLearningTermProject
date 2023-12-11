@@ -41,7 +41,7 @@ if __name__ == '__main__':
                                               word_to_id=word_to_id,
                                               load_pickle=True)
     random.shuffle(test_data_list)
-    test_data_list = test_data_list[:1000]
+    test_data_list = test_data_list[:1]
 
     total_loss = 0
     for test_data in test_data_list:

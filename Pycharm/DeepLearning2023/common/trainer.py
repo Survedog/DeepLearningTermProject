@@ -99,9 +99,10 @@ class RnnlmTrainer:
                 xs_batch, ts_batch = self.get_batch(batch_size, time_size, xs, ts)
 
                 loss = self.model.forward(xs_batch, ts_batch)
-                epoch_total_loss += py.sum(loss)
-                epoch_loss_count += len(xs_batch)
-
+                epoch_total_loss += loss
+                epoch_loss_count += 1
+                
+                # todo: 기울기 클리핑 적용
                 self.model.backward()
                 self.optimizer.update(self.model.params, self.model.grads)
 
