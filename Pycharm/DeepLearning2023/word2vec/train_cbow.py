@@ -29,7 +29,7 @@ if __name__ == '__main__':
     # 트레이너 설정
     max_epoch = 5
     batch_size = 10000
-    do_fitting = False
+    do_fitting = True
     continue_from_last_fit = True
     save_params = False
 

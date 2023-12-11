@@ -31,7 +31,7 @@ if __name__ == '__main__':
     batch_size = 30000
     do_fitting = True
     continue_from_last_fit = True
-    save_params = True
+    save_params = False
 
     print('Creating model...')
     model = SkipgramModel(corpus=corpus,
