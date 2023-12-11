@@ -31,13 +31,17 @@ class LSTMLayer(LayerBase):
 
         dtanh_c = dh * o
         ds = dc + dtanh_c * (1 - py.square(tanh_c))
-
         dc_prev = ds * f
+
         do = dh * tanh_c
         df = ds * c_prev
         dg = ds * i
         di = ds * g
-        daffine = py.hstack((df*(1-df), 1 - py.square(dg), di*(1-di), do*(1-do)))
+
+        daffine = py.hstack((df * f * (1 - f),
+                             dg * g * (1 - py.square(g)),
+                             di * i * (1 - i),
+                             do * o * (1 - o)))
 
         weight_x, weight_h, _ = self.params
         dweight_x, dweight_h, dbias = self.grads
@@ -46,7 +50,7 @@ class LSTMLayer(LayerBase):
         dweight_h[...] = py.matmul(h_prev.T, daffine)
         dbias[...] = daffine.sum(axis=0)
 
-        dh_prev = py.matmul(daffine, weight_h.T)
         dx = py.matmul(daffine, weight_x.T)
+        dh_prev = py.matmul(daffine, weight_h.T)
 
         return dx, dh_prev, dc_prev
