@@ -78,11 +78,14 @@ def create_context_and_target(corpus):
 
 def get_one_hot_encoding(num, array_size):
     if isinstance(num, int):
-        encoded = py.zeros(array_size)
+        encoded = py.zeros(array_size, dtype=int)
         encoded[num] = 1
     else:
-        encoded = py.zeros((num.shape[0], array_size))
-        encoded[range(num.shape[0]), num] = 1
+        encoded = py.zeros(num.shape + (array_size,), dtype=int)
+
+        # 1이 되어야 하는 각 원소에 접근하기 위한 인덱스를 생성한다.
+        index = get_ndarray_index(num) + tuple([num.flatten()])
+        encoded[index] = 1
     return encoded
 
 
@@ -221,3 +224,13 @@ def get_processed_essay_data(load_test_data, word_to_id, load_pickle=False, max_
 
     save_data(pickle_name, eval_data_list)
     return eval_data_list
+
+def get_ndarray_index(num):
+    index = []
+    left = 1  # 각 차원의 상위 차원 개수
+    for s in num.shape:
+        right = num.size // (s * left)  # 각 차원의 하위 차원 개수
+        dim_index = py.tile(py.repeat(py.arange(s), right), left)
+        index.append(dim_index)
+        left *= s
+    return tuple(index)

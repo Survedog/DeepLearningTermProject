@@ -111,15 +111,24 @@ class UtilsTests(unittest.TestCase):
         self.assertTrue(py.array_equal(encoded, answer))
 
         encoded = get_one_hot_encoding(99, 100)
-        answer = py.zeros(100)
+        answer = py.zeros(100, dtype=int)
         answer[99] = 1
         self.assertTrue(py.array_equal(encoded, answer))
 
         # 1차원 입력
         nums = py.array([0, 8, 2])
         encoded = get_one_hot_encoding(nums, 10)
-        answer = py.zeros((3, 10))
+        answer = py.zeros((3, 10), dtype=int)
         answer[0, 0], answer[1, 8], answer[2, 2] = 1, 1, 1
+        self.assertTrue(py.array_equal(encoded, answer))
+
+        # 2차원 입력
+        nums = py.array([[0, 8, 2],
+                         [1, 4, 3]])
+        encoded = get_one_hot_encoding(nums, 10)
+        answer = py.zeros((2, 3, 10), dtype=int)
+        answer[0, 0, 0], answer[0, 1, 8], answer[0, 2, 2] = 1, 1, 1
+        answer[1, 0, 1], answer[1, 1, 4], answer[1, 2, 3] = 1, 1, 1
         self.assertTrue(py.array_equal(encoded, answer))
 
     def test_get_class_cross_entropy(self):
@@ -198,3 +207,38 @@ class UtilsTests(unittest.TestCase):
 
         for word_id, word in id_to_word.items():
             self.assertEqual(word_id, word_to_id[word])
+
+    def test_get_index_value_tuple(self):
+        # 1차원 입력
+        arr = py.array([5, 4, 3, 2])
+        answer = py.array([[0, 1, 2, 3]])
+        answer = tuple(answer)
+
+        for a, b in zip(get_ndarray_index(arr), answer):
+            self.assertTrue(py.array_equal(a, b))
+
+        # 2차원 입력
+        arr = py.array([[5, 4, 3],
+                        [3, 4, 5]])
+        answer = py.array([[0, 0, 0, 1, 1, 1],
+                           [0, 1, 2, 0, 1, 2]])
+        answer = tuple(answer)
+
+        for a, b in zip(get_ndarray_index(arr), answer):
+            self.assertTrue(py.array_equal(a, b))
+
+        # 3차원 입력
+        arr = py.array([[[5, 4, 3],
+                         [3, 4, 5]],
+
+                        [[4, 7, 3],
+                         [1, 5, 3]]])
+        answer = py.array([[0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1],
+                           [0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1],
+                           [0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2]])
+        answer = tuple(answer)
+
+        for a, b in zip(get_ndarray_index(arr), answer):
+            self.assertTrue(py.array_equal(a, b))
+
+

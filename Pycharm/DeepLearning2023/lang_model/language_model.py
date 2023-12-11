@@ -43,7 +43,6 @@ class LanguageModel(LayerBase):
             xs = xs.reshape(1, -1)
 
         xs = self.predict(xs)
-        ts = ts.reshape(1, -1)
         loss = self.loss_layer.forward(xs, ts)
         return loss
 
