@@ -20,8 +20,8 @@ if __name__ == '__main__':
     wordvec_size = 100
     sample_size = 50
     vocab_size = len(id_to_word)
-    weight_in = py.random.rand(vocab_size, wordvec_size)
-    weight_out_list = [py.random.rand(vocab_size, wordvec_size) for _ in range(target.shape[-1])]
+    weight_in = py.random.randn(vocab_size, wordvec_size)
+    weight_out_list = [py.random.randn(vocab_size, wordvec_size) for _ in range(target.shape[-1])]
 
     # 옵티마이저 설정
     learning_rate = 0.001

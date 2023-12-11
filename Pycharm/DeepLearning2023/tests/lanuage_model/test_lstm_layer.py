@@ -12,16 +12,16 @@ class LSTMLayerTests(unittest.TestCase):
         vocab_size = 20
         hidden_size = 5
 
-        x = py.random.randint(0, vocab_size, (batch_size, vocab_size))
+        x = py.random.randnint(0, vocab_size, (batch_size, vocab_size))
         h_prev = py.zeros((batch_size, hidden_size))
         c_prev = py.zeros((batch_size, hidden_size))
 
         dh = py.ones_like(h_prev)
         dc = py.ones_like(c_prev)
 
-        weight_x = py.random.rand(vocab_size, hidden_size * 4)
-        weight_h = py.random.rand(hidden_size, hidden_size * 4)
-        bias = py.random.rand(1, hidden_size * 4)
+        weight_x = py.random.randn(vocab_size, hidden_size * 4)
+        weight_h = py.random.randn(hidden_size, hidden_size * 4)
+        bias = py.random.randn(1, hidden_size * 4)
 
         try:
             layer = LSTMLayer(weight_x, weight_h, bias)

@@ -12,16 +12,16 @@ class LanguageModel(LayerBase):
         super().__init__()
 
         if embed_weight is None:
-            embed_weight = py.random.rand(vocab_size, wordvec_size)
+            embed_weight = py.random.randnn(vocab_size, wordvec_size, dtype='f') / 100
             load_embed_weight = False
         else:
             load_embed_weight = True
 
-        lstm_weight_x = py.random.rand(wordvec_size, 4 * hidden_size)
-        lstm_weight_h = py.random.rand(hidden_size, 4 * hidden_size)
-        lstm_bias = py.zeros(4 * hidden_size)
-        affine_weight = py.random.rand(hidden_size, vocab_size)
-        affine_bias = py.zeros(vocab_size)
+        lstm_weight_x = py.random.randnn(wordvec_size, 4 * hidden_size, dtype='f') / py.sqrt(wordvec_size)
+        lstm_weight_h = py.random.randnn(hidden_size, 4 * hidden_size, dtype='f') / py.sqrt(hidden_size)
+        lstm_bias = py.zeros(4 * hidden_size, dtype='f')
+        affine_weight = py.random.randnn(hidden_size, vocab_size, dtype='f') / py.sqrt(hidden_size)
+        affine_bias = py.zeros(vocab_size, dtype='f')
 
         self.layers = [TimeEmbeddingLayer(embed_weight),
                        TimeLSTMLayer(lstm_weight_x, lstm_weight_h, lstm_bias),

@@ -15,7 +15,7 @@ if __name__ == '__main__':
     vocab_size = len(id_to_word)
     wordvec_size = 100
     hidden_size = 100
-    time_size = 100
+    time_size = 30
     batch_size = 10
 
     model = LanguageModel(vocab_size=vocab_size,

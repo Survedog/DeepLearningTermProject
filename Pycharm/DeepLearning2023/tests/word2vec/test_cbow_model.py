@@ -11,8 +11,8 @@ class CBowModelTests(unittest.TestCase):
 
         hidden_size = 3
         vocab_size = len(id_to_word)
-        weight_in = py.random.rand(vocab_size, hidden_size)
-        weight_out = py.random.rand(vocab_size, hidden_size)
+        weight_in = py.random.randn(vocab_size, hidden_size)
+        weight_out = py.random.randn(vocab_size, hidden_size)
 
         cbow = CBowModel(corpus=corpus,
                          vocab_size=vocab_size,

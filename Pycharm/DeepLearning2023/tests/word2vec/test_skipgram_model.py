@@ -12,8 +12,8 @@ class SkipgramModelTests(unittest.TestCase):
         wordvec_size = 3
         vocab_size = len(id_to_word)
 
-        weight_in = py.random.rand(vocab_size, wordvec_size)
-        weight_out_list = [py.random.rand(vocab_size, wordvec_size) for _ in range(targets.shape[-1])]
+        weight_in = py.random.randn(vocab_size, wordvec_size)
+        weight_out_list = [py.random.randn(vocab_size, wordvec_size) for _ in range(targets.shape[-1])]
 
         skipgram = SkipgramModel(corpus=corpus,
                                  vocab_size=vocab_size,
