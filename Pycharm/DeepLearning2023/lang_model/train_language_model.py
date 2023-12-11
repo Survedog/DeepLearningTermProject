@@ -10,7 +10,7 @@ if __name__ == '__main__':
     train_data_list = get_processed_essay_data(load_test_data=False,
                                                word_to_id=word_to_id,
                                                load_pickle=True)
-    train_data_list = train_data_list[:100]
+    train_data_list = train_data_list[:10]
 
     vocab_size = len(id_to_word)
     wordvec_size = 100

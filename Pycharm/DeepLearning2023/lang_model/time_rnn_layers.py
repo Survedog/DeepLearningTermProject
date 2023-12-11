@@ -40,7 +40,7 @@ class TimeLSTMLayer(LayerBase):
 
         return hs
 
-    # todo: 기울기 소실/폭발 해결
+    # todo: 기울기 폭발 해결
     def backward(self, dhs):
         """
         :param dhs: 깊이 방향으로 출력된 h들의 열 hs에 대한 손실의 미분

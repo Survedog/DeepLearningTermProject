@@ -28,6 +28,7 @@ class TimeEmbeddingLayer(LayerBase):
 
     def backward(self, dout):
         batch_size, time_size, wordvec_size = dout.shape
+        self.grads[0][...] = 0
 
         for time in reversed(range(time_size)):
             layer = self.layers[time]
