@@ -103,8 +103,9 @@ def get_class_cross_entropy(y, t):
     if y.ndim < 3:
         y = y.reshape((1,) * (3 - y.ndim) + y.shape)
 
-    batch_index = py.repeat(py.arange(t.shape[0]), t.shape[1]).reshape(t.shape)
-    sample_index = py.resize(py.arange(t.shape[1]), t.shape)
+    index = get_ndarray_index(t)
+    batch_index = index[0].reshape(t.shape)
+    sample_index = index[1].reshape(t.shape)
     return (-py.log(y[batch_index, sample_index, t])).reshape(original_t_shape)
 
 
