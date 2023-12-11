@@ -109,6 +109,12 @@ def get_class_cross_entropy(y, t):
     return (-py.log(y[batch_index, sample_index, t])).reshape(original_t_shape)
 
 
+def get_sum_of_squares_error(y, t):
+    sse = py.square(y - t).sum(axis=-1)
+    sse /= 2  # delta rule
+    return sse
+
+
 def save_data(pickle_name, data):
     pickle_path = Config.PICKLE_PATH.joinpath(pickle_name)
     with open(pickle_path, "wb") as f:

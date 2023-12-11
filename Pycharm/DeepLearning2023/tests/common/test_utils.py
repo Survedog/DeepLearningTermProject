@@ -188,6 +188,26 @@ class UtilsTests(unittest.TestCase):
                                              [0.5, 0.2],
                                              [0.4, 0.7]]))))
 
+    def test_get_sum_of_squares_error(self):
+        # 1차원 입력
+        x = py.array([5.0, 4.5, 3.2, 2.1, 1.9])
+        t = py.array([4.5, 4.5, 2.2, 1.1, -0.1])
+
+        result = get_sum_of_squares_error(x, t)
+        correct_result = (0.25 + 1 + 1 + 4) / 2
+        self.assertAlmostEqual(result, correct_result)
+
+        # 2차원 입력
+        x = py.array([[5.0, 4.5, 3.2],
+                      [1.0, -2.5, -0.5]])
+        t = py.array([[5.0, 4.5, 3.2],
+                      [0.0, 2.5, -0.5]])
+
+        result = get_sum_of_squares_error(x, t)
+        correct_result = py.array([0.0, 26]) / 2
+        self.assertTrue(py.allclose(result, correct_result))
+
+
     def test_load_essay_data_list(self):
         train_data = load_essay_data_list(load_test_data=False, load_pickle=False)
         test_data = load_essay_data_list(load_test_data=True, load_pickle=False)

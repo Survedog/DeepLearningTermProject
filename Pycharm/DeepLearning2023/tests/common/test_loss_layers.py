@@ -60,3 +60,23 @@ class SoftmaxWithLossLayerTests(unittest.TestCase):
         self.assertTrue(py.allclose(dx, correct_dx))
 
 
+class SSELossLayerTests(unittest.TestCase):
+
+    def test_forward_and_backward(self):
+        layer = SSELossLayer()
+
+        # 2차원 입력
+        x = py.array([[5.0, 4.5, 3.2],
+                      [1.0, -2.5, -0.5]])
+        t = py.array([[5.0, 4.5, 3.2],
+                      [0.0, 2.5, -0.5]])
+
+        loss = layer.forward(x, t)
+        correct_loss = 6.5
+        self.assertTrue(py.allclose(loss, correct_loss))
+
+        dout = 0.5
+        dx = layer.backward(dout)
+        correct_dx = py.array([[0.0, 0.0, 0.0],
+                               [0.5, -2.5, 0.0]])
+        self.assertTrue(py.allclose(dx, correct_dx))
