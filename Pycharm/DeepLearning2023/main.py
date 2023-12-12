@@ -18,15 +18,15 @@ if __name__ == '__main__':
     embed_weight, _ = load_data('cbow_params.p')
 
     do_fitting = True
-    load_saved_param = True
-    save_param = False
+    load_saved_param = False
+    save_param = True
 
     vocab_size = len(id_to_word)
     wordvec_size = embed_weight.shape[-1]
     lstm_hidden_size = 100
     time_size = 100
 
-    train_data_size = 1000
+    train_data_size = -1
     test_data_size = 1000
     max_epoch = 5
 
@@ -41,7 +41,7 @@ if __name__ == '__main__':
     # 학습
     if do_fitting:
         print('Loading train data...')
-        x_list, t_list = EssayEvalModel.get_x_t_list_from_processed_data(train_data_list[: train_data_size], time_size=time_size, load_pickle=False, save_pickle=True)
+        x_list, t_list = EssayEvalModel.get_x_t_list_from_processed_data(train_data_list[:train_data_size], time_size=time_size, load_pickle=False, save_pickle=True)
         trainer.fit(x_list, t_list,
                     max_epoch=max_epoch)
         trainer.plot()
@@ -61,7 +61,7 @@ if __name__ == '__main__':
     for x, t in zip(x_list, t_list):
         test_id += 1
         eval_model.reset_state()
-        loss = eval_model.forward(x, t)
+        loss = eval_model.forward(x, t, train_flag=False)
         print('Test %d - Loss: %.2f' % (test_id, loss))
 
         total_loss += loss
@@ -74,5 +74,5 @@ if __name__ == '__main__':
 
     for x, t in zip(x_list[:predict_count], t_list[:predict_count]):
         eval_model.reset_state()
-        prediction = eval_model.predict(x)
+        prediction = eval_model.predict(x, train_flag=False)
         print('Diff:', prediction - t)
