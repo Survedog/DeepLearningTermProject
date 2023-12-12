@@ -159,11 +159,27 @@ def create_essay_corpus_and_dict(load_pickle=True, save_pickle=True, batch_size=
 
     essay_data_list = load_essay_data_list(load_test_data=False, load_pickle=True)
     text_list = get_joined_paragraph_text_list(essay_data_list, batch_size)
-
     corpus, id_to_word, word_to_id = create_corpus_and_dict(text_list)
+
     if save_pickle:
         save_data(pickle_name, (corpus, id_to_word, word_to_id))
     return corpus, id_to_word, word_to_id
+
+
+def create_test_essay_corpus(word_to_id, load_pickle=True, save_pickle=True):
+    pickle_name = 'essay_corpus_test.p'
+    if load_pickle:
+        data = load_data(pickle_name)
+        if data is not None:
+            return data
+
+    test_essay_data_list = load_essay_data_list(load_test_data=True, load_pickle=True)
+    test_corpus = text_to_ids(test_essay_data_list, word_to_id)
+
+    if save_pickle:
+        save_data(pickle_name, test_corpus)
+    return test_corpus
+
 
 def get_joined_paragraph_text_list(essay_data_list, batch_size=100):
     """
@@ -184,7 +200,7 @@ def get_joined_paragraph_text_list(essay_data_list, batch_size=100):
 
     text_list.append(''.join(text_batch))
 
-def paragraph_text_to_ids(text_list, word_to_id):
+def text_to_ids(text_list, word_to_id):
     word_ids = []
     unknown_token_id = word_to_id.get('<UNK>', len(word_to_id))
 
