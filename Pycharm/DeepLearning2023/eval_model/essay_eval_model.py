@@ -55,6 +55,7 @@ class EssayEvalModel(LayerBase):
         xs, score_metrics = x
 
         embed_xs = self.time_embedding_layer.forward(xs)
+        self.time_lstm_layer.reset_state()
         hs = self.time_lstm_layer.forward(embed_xs)
         # todo: hs 값을 평균내볼까?
         rhs = hs.reshape(-1, self.time_size * self.lstm_hidden_size)
