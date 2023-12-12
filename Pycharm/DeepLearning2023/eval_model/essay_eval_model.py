@@ -19,8 +19,10 @@ class EssayEvalModel(LayerBase):
         randn = py.random.randn
         if embed_weight is None:
             embed_weight = randn(vocab_size, wordvec_size, dtype='f') / 100
+            self.default_params_pickle_name = 'essay_eval_model_params_w_embed_weight.p'
             fit_from = 0
         else:
+            self.default_params_pickle_name = 'essay_eval_model_params.p'
             fit_from = 1
 
         lstm_weight_x = py.random.randn(wordvec_size, 4 * lstm_hidden_size, dtype='f') / py.sqrt(wordvec_size)
