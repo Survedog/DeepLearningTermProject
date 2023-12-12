@@ -228,10 +228,10 @@ class UtilsTests(unittest.TestCase):
         for word_id, word in id_to_word.items():
             self.assertEqual(word_id, word_to_id[word])
 
-    def test_paragraph_text_to_ids(self):
+    def test_text_to_ids(self):
         text_list = ['안녕하세요, 만나서 반갑습니다.', '그러면 연락 기다리고 있겠습니다.']
         corpus, id_to_word, word_to_id = create_corpus_and_dict(text_list)
-        result = paragraph_text_to_ids(text_list, word_to_id)
+        result = text_to_ids(text_list, word_to_id)
         self.assertTrue(py.array_equal(corpus, result))
 
     def test_get_index_value_tuple(self):
