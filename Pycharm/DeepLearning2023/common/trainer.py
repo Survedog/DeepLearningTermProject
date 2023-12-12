@@ -4,6 +4,7 @@ from common.utils import py
 from math import ceil
 import time
 
+
 class Trainer:
 
     def __init__(self, model, optimizer):
@@ -100,7 +101,7 @@ class RnnlmTrainer:
                 loss = self.model.forward(xs_batch, ts_batch)
                 epoch_total_loss += loss
                 epoch_loss_count += 1
-                
+
                 # todo: 기울기 클리핑 적용
                 self.model.backward()
                 self.optimizer.update(self.model.params, self.model.grads)
@@ -116,7 +117,7 @@ class RnnlmTrainer:
 
     def get_batch(self, batch_size, time_size, xs, ts):
         data_size = len(xs)
-        assert(time_size <= data_size)
+        assert (time_size <= data_size)
 
         xs_batch = py.empty((batch_size, time_size), dtype=int)
         ts_batch = py.empty((batch_size, time_size), dtype=int)
@@ -158,3 +159,17 @@ class RnnlmTrainer:
         plt.ylabel(ylabel)
         plt.title(title)
         plt.show()
+
+
+class EssayEvalModelTrainer(Trainer):
+
+    def fit(self, x, t, max_epoch=20, print_info=True, eval_interval=1):
+        super().fit(x, t,
+                    batch_size=1,
+                    random_batch=False,
+                    max_epoch=max_epoch,
+                    print_info=print_info,
+                    eval_interval=eval_interval)
+
+    def get_batch(self, batch_size, iteration, x, t):
+        return x, t

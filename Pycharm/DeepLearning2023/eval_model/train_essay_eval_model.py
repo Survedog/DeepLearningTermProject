@@ -1,7 +1,6 @@
 from eval_model.essay_eval_model import EssayEvalModel
-from lang_model.time_rnn_layers import TimeLSTMLayer
 from common.utils import py, create_essay_corpus_and_dict, get_processed_essay_data
-from common.trainer import Trainer
+from common.trainer import EssayEvalModelTrainer
 from common.adam_optimizer import AdamOptimizer
 
 if __name__ == '__main__':
@@ -22,7 +21,7 @@ if __name__ == '__main__':
     print('Creating model...')
     eval_model = EssayEvalModel(vocab_size, wordvec_size, hidden_size, time_size)
     optimizer = AdamOptimizer()
-    trainer = Trainer(eval_model, optimizer)
+    trainer = EssayEvalModelTrainer(eval_model, optimizer)
 
     if load_saved_param:
         eval_model.load_params()
@@ -34,7 +33,10 @@ if __name__ == '__main__':
 
         for (x, t) in x_t_list:
             train_count += 1
-            trainer.fit(x, t)
+            trainer.fit(x, t,
+                        batch_size=1,
+                        random_batch=False,
+                        max_epoch=10)
             print('%d번 데이터 학습 완료.' % train_count)
 
         if save_param:
