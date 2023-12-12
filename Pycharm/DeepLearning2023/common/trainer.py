@@ -53,7 +53,6 @@ class Trainer:
 
         x_batch = x[batch_start:batch_end]
         t_batch = t[batch_start:batch_end]
-        loss = self.model.forward(x_batch, t_batch)
         return x_batch, t_batch
 
     def eval_model(self, epoch, epoch_total_loss, loss_count):
