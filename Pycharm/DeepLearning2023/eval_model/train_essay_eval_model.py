@@ -1,7 +1,8 @@
 from eval_model.essay_eval_model import EssayEvalModel
-from common.utils import py, create_essay_corpus_and_dict, get_processed_essay_data
+from common.utils import create_essay_corpus_and_dict, get_processed_essay_data
 from common.trainer import EssayEvalModelTrainer
 from common.adam_optimizer import AdamOptimizer
+import random
 
 if __name__ == '__main__':
 
@@ -16,13 +17,17 @@ if __name__ == '__main__':
     train_data_list = get_processed_essay_data(load_test_data=False, word_to_id=word_to_id, load_pickle=True)
 
     do_fitting = True
-    load_saved_param = False
+    load_saved_param = True
     save_param = True
 
     vocab_size = len(id_to_word)
     wordvec_size = 100
     hidden_size = 100
     time_size = 30
+
+    train_data_size = 10000
+    test_data_size = 1000
+    max_epoch = 5
 
     print('Creating model...')
     eval_model = EssayEvalModel(vocab_size, wordvec_size, hidden_size, time_size)
@@ -32,11 +37,33 @@ if __name__ == '__main__':
     if load_saved_param:
         eval_model.load_params()
 
+    # 학습
     if do_fitting:
         print('Loading train data...')
-        x, t = EssayEvalModel.get_x_t_list_from_processed_data(train_data_list[:1000], time_size=time_size, load_pickle=False, save_pickle=True)
-        trainer.fit(x, t,
-                    max_epoch=10)
+        x_list, t_list = EssayEvalModel.get_x_t_list_from_processed_data(train_data_list[10000:10000 + train_data_size], time_size=time_size, load_pickle=False, save_pickle=True)
+        trainer.fit(x_list, t_list,
+                    max_epoch=max_epoch)
+        trainer.plot()
 
         if save_param:
             eval_model.save_params()
+
+    # 평가
+    test_data_list = get_processed_essay_data(load_test_data=True, word_to_id=word_to_id, load_pickle=True)
+    random.shuffle(test_data_list)
+    x_list, t_list = EssayEvalModel.get_x_t_list_from_processed_data(test_data_list[:test_data_size], time_size=time_size, load_pickle=False, save_pickle=False)
+
+    total_loss = 0
+    loss_count = 0
+    test_id = 0
+
+    for x, t in zip(x_list, t_list):
+        test_id += 1
+        eval_model.reset_state()
+        loss = eval_model.forward(x, t)
+        print('Test %d - Loss: %.2f' % (test_id, loss))
+
+        total_loss += loss
+        loss_count += 1
+
+    print('Final Test Loss: %.2f' % (total_loss / loss_count))
