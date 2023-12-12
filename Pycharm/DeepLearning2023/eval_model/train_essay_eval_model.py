@@ -7,6 +7,12 @@ if __name__ == '__main__':
 
     print('Loading corpus...')
     _, id_to_word, word_to_id = create_essay_corpus_and_dict(load_pickle=True)
+
+    if '<UNK>' not in word_to_id:
+        unknown_id = len(word_to_id)
+        id_to_word[unknown_id] = '<UNK>'
+        word_to_id['<UNK>'] = unknown_id
+
     train_data_list = get_processed_essay_data(load_test_data=False, word_to_id=word_to_id, load_pickle=True)
 
     do_fitting = True
