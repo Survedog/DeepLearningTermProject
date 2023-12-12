@@ -3,22 +3,33 @@ from common.affine_layer import AffineLayer
 from common.utils import py, load_data, save_data
 from common.loss_layers import SSELossLayer
 from lang_model.time_rnn_layers import TimeLSTMLayer
+from lang_model.time_embedding_layer import TimeEmbeddingLayer
 import math
 
 
 class EssayEvalModel(LayerBase):
 
-    def __init__(self, wordvec_size=100, lstm_hidden_size=100, time_size=50):
+    def __init__(self, vocab_size, wordvec_size=100, lstm_hidden_size=30, time_size=50, embed_weight=None):
         super().__init__()
         self.cache = None
 
-        affine_input_size = time_size + 4
-        exp_metrics_amount, org_metrics_amount, cont_metrics_amount = 3, 4, 4
+        self.time_size = time_size
+        self.lstm_hidden_size = lstm_hidden_size
 
         randn = py.random.randn
+        if embed_weight is None:
+            embed_weight = randn(vocab_size, wordvec_size, dtype='f') / 100
+            fit_from = 0
+        else:
+            fit_from = 1
+
         lstm_weight_x = py.random.randn(wordvec_size, 4 * lstm_hidden_size, dtype='f') / py.sqrt(wordvec_size)
         lstm_weight_h = py.random.randn(lstm_hidden_size, 4 * lstm_hidden_size, dtype='f') / py.sqrt(lstm_hidden_size)
         lstm_bias = py.zeros(4 * lstm_hidden_size, dtype='f')
+
+        affine_input_size = time_size * lstm_hidden_size + 4
+        exp_metrics_amount, org_metrics_amount, cont_metrics_amount = 3, 4, 4
+
         exp_affine_weight = randn(affine_input_size, exp_metrics_amount * 3, dtype='f')
         exp_affine_bias = randn(exp_metrics_amount * 3, dtype='f')
         org_affine_weight = randn(affine_input_size, org_metrics_amount * 3, dtype='f')
@@ -26,33 +37,41 @@ class EssayEvalModel(LayerBase):
         cont_affine_weight = randn(affine_input_size, cont_metrics_amount * 3, dtype='f')
         cont_affine_bias = randn(cont_metrics_amount * 3, dtype='f')
 
+        self.time_embedding_layer = TimeEmbeddingLayer(embed_weight)
         self.time_lstm_layer = TimeLSTMLayer(lstm_weight_x, lstm_weight_h, lstm_bias)
         self.exp_affine_layer = AffineLayer(exp_affine_weight, exp_affine_bias)
         self.org_affine_layer = AffineLayer(org_affine_weight, org_affine_bias)
         self.cont_affine_layer = AffineLayer(cont_affine_weight, cont_affine_bias)
 
-        self.layers = [self.time_lstm_layer, self.org_affine_layer, self.cont_affine_layer, self.exp_affine_layer]
         self.loss_layer = SSELossLayer()
+        self.layers = [self.time_embedding_layer, self.time_lstm_layer, self.exp_affine_layer, self.org_affine_layer, self.cont_affine_layer]
 
-        for layer in self.layers:
+        for i in range(fit_from, len(self.layers)):
+            layer = self.layers[i]
             self.params += layer.params
             self.grads += layer.grads
 
     def predict(self, x):
         xs, score_metrics = x
-        hs = self.time_lstm_layer.predict(xs)
-        fhs = hs.flatten()
 
-        org_x = py.hstack((fhs, score_metrics[0]))
-        cont_x = py.hstack((fhs, score_metrics[1]))
-        exp_x = py.hstack((fhs, score_metrics[2]))
+        embed_xs = self.time_embedding_layer.forward(xs)
+        hs = self.time_lstm_layer.forward(embed_xs)
+        # todo: hs 값을 평균내볼까?
+        rhs = hs.reshape(-1, self.time_size * self.lstm_hidden_size)
 
-        org_scores = self.org_affine_layer.forward(org_x)
-        cont_scores = self.cont_affine_layer.forward(cont_x)
-        exp_scores = self.exp_affine_layer.forward(exp_x)
+        for i in range(len(score_metrics)):
+            score_metrics[i] = score_metrics[i][py.newaxis].repeat(rhs.shape[0], axis=0)
 
-        self.cache = (hs.shape, fhs.shape[-1])
-        scores = py.hstack((org_scores, cont_scores, exp_scores))
+        exp_x = py.hstack((rhs, score_metrics[0]))
+        org_x = py.hstack((rhs, score_metrics[1]))
+        cont_x = py.hstack((rhs, score_metrics[2]))
+
+        exp_scores = self.exp_affine_layer.forward(exp_x).mean(axis=0)
+        org_scores = self.org_affine_layer.forward(org_x).mean(axis=0)
+        cont_scores = self.cont_affine_layer.forward(cont_x).mean(axis=0)
+
+        self.cache = (hs.shape, rhs.shape)
+        scores = py.hstack((exp_scores, org_scores, cont_scores))
         return scores
 
     def forward(self, x, t):
@@ -61,17 +80,23 @@ class EssayEvalModel(LayerBase):
         return loss
 
     def backward(self, dout=1):
-        hs_shape, fhs_len = self.cache
+        hs_shape, rhs_shape = self.cache
 
         dscore = self.loss_layer.backward(dout)
 
-        dhs = py.zeros(fhs_len, dtype='f')
-        dhs += self.exp_affine_layer.backward(dscore)[:fhs_len]
-        dhs += self.cont_affine_layer.backward(dscore)[:fhs_len]
-        dhs += self.org_affine_layer.backward(dscore)[:fhs_len]
+        dexp_scores = dscore[:9][py.newaxis].repeat(rhs_shape[0], axis=0) / rhs_shape[0]
+        dorg_scores = dscore[9:21][py.newaxis].repeat(rhs_shape[0], axis=0) / rhs_shape[0]
+        dcont_scores = dscore[21:33][py.newaxis].repeat(rhs_shape[0], axis=0) / rhs_shape[0]
 
-        dhs = dhs.reshape(hs_shape)
-        self.time_lstm_layer.backward(dhs)
+        drhs = py.zeros(rhs_shape, dtype='f')
+        drhs += self.exp_affine_layer.backward(dexp_scores)[:, :rhs_shape[-1]]
+        drhs += self.org_affine_layer.backward(dorg_scores)[:, :rhs_shape[-1]]
+        drhs += self.cont_affine_layer.backward(dcont_scores)[:, :rhs_shape[-1]]
+
+        dhs = drhs.reshape(hs_shape)
+        dembed_xs = self.time_lstm_layer.backward(dhs)
+        self.time_embedding_layer.backward(dembed_xs)
+
 
     def reset_state(self):
         self.time_lstm_layer.reset_state()

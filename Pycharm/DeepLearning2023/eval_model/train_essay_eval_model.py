@@ -14,11 +14,12 @@ if __name__ == '__main__':
     hidden_size = 100
     time_size = 30
 
-    eval_model = EssayEvalModel(wordvec_size, hidden_size, time_size)
+    eval_model = EssayEvalModel(vocab_size, wordvec_size, hidden_size, time_size)
     optimizer = AdamOptimizer()
     trainer = Trainer(eval_model, optimizer)
 
     x_t_list = EssayEvalModel.get_x_t_list_from_processed_data(train_data_list[:10], time_size=time_size, load_pickle=False, save_pickle=True)
     for (x, t) in x_t_list:
         eval_model.forward(x, t)
+        eval_model.backward()
         # trainer.fit(x, t)
