@@ -173,8 +173,5 @@ class EssayEvalModelTrainer(Trainer):
                     print_info=print_info,
                     eval_interval=eval_interval)
 
-    def get_iters_per_epoch(self, x, batch_size):
-        return 1
-
     def get_batch(self, batch_size, iteration, x, t):
-        return x, t
+        return x[iteration - 1], t[iteration - 1]

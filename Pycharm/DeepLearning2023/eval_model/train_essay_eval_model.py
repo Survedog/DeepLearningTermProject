@@ -34,14 +34,9 @@ if __name__ == '__main__':
 
     if do_fitting:
         print('Loading train data...')
-        x_t_list = EssayEvalModel.get_x_t_list_from_processed_data(train_data_list[:10], time_size=time_size, load_pickle=False, save_pickle=True)
-        train_count = 0
-
-        for (x, t) in x_t_list:
-            train_count += 1
-            trainer.fit(x, t,
-                        max_epoch=10)
-            print('%d번 데이터 학습 완료.' % train_count)
+        x, t = EssayEvalModel.get_x_t_list_from_processed_data(train_data_list[:100], time_size=time_size, load_pickle=False, save_pickle=True)
+        trainer.fit(x, t,
+                    max_epoch=10)
 
         if save_param:
             eval_model.save_params()

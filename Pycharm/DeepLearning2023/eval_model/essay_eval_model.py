@@ -109,11 +109,11 @@ class EssayEvalModel(LayerBase):
     @classmethod
     def get_x_t_list_from_processed_data(cls, data_list, time_size, load_pickle=True, save_pickle=False, pickle_name='eval_model_args.p'):
         if load_pickle:
-            args_list = load_data(pickle_name)
-            if args_list is not None:
-                return args_list
+            data = load_data(pickle_name)
+            if data is not None:
+                return data
 
-        args_list = []
+        x_list, t_list = [], []
 
         for data in data_list:
             xs = py.array(sum(data['paragraph'], []))
@@ -128,12 +128,12 @@ class EssayEvalModel(LayerBase):
 
             t = sum(data['score']['exp'], []) + sum(data['score']['org'], []) + sum(data['score']['cont'], [])
             t = py.array(t)
+            t_list.append(t)
 
             x = (xs, score_metrics)
-            args_list.append([x, t])
+            x_list.append(x)
 
         if save_pickle:
-            save_data(pickle_name, args_list)
+            save_data(pickle_name, (x_list, t_list))
 
-        return args_list
-
+        return x_list, t_list
