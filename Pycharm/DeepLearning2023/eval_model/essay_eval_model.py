@@ -40,7 +40,8 @@ class EssayEvalModel(LayerBase):
             self.grads += layer.grads
 
 
-    def predict(self, xs, score_metrics):
+    def predict(self, x):
+        xs, score_metrics = x
         hs = self.rnn_model.predict(xs)
         fhs = hs.flatten()
 
@@ -53,10 +54,11 @@ class EssayEvalModel(LayerBase):
         exp_scores = self.exp_affine_layer.forward(exp_x)
 
         self.cache = (hs.shape, fhs.shape[-1])
-        return org_scores, cont_scores, exp_scores
+        scores = py.hstack((org_scores, cont_scores, exp_scores))
+        return scores
 
-    def forward(self, xs, score_weights, t):
-        scores = self.predict(xs, score_weights)
+    def forward(self, x, t):
+        scores = self.predict(x)
         loss = self.loss_layer.forward(scores, t)
         return loss
 
@@ -76,36 +78,35 @@ class EssayEvalModel(LayerBase):
     def reset_state(self):
         self.rnn_model.reset_state()
 
+    # todo: 데이터 스케일 전처리
     @classmethod
-    def get_args_from_processed_data(cls, data, time_size=50, load_pickle=True, save_pickle=False, pickle_name='eval_model_args.p'):
+    def get_x_t_list_from_processed_data(cls, data_list, time_size, load_pickle=True, save_pickle=False, pickle_name='eval_model_args.p'):
         if load_pickle:
-            args = load_data(pickle_name)
-            if args is not None:
-                return args
+            args_list = load_data(pickle_name)
+            if args_list is not None:
+                return args_list
 
-        xs = []
-        for paragraph in data['paragraph']:
-            split_amount = math.ceil(len(paragraph) / time_size)
+        args_list = []
 
-            paragraph = py.array(paragraph)
-            paragraph.resize((1, split_amount * time_size))  # time size에 맞는 크기가 될 때까지 내용을 반복시킨다.
-            paragraph = paragraph.reshape(-1, time_size)
-            xs.append(paragraph)
-        xs = py.array(xs)
+        for data in data_list:
+            xs = py.array(sum(data['paragraph'], []))
+            split_amount = math.ceil(len(xs) / time_size)
+            xs = py.resize(xs, (1, split_amount * time_size)).reshape(-1, time_size)  # time size에 맞는 크기가 될 때까지 내용을 반복시킨다.
 
-        org_weight, cont_weight, exp_weight = data['weight']['org'], data['weight']['cont'], data['weight']['exp']
-        # 대분류 가중치를 그에 해당하는 소분류 가중치에 곱한다.
-        score_metrics = [exp_weight['exp'] * py.array([exp_weight['exp_grammar'], exp_weight['exp_vocab'], exp_weight['exp_style'], data['corr_count']]),  # 문법 점수 계산에 교정 횟수를 포함
-                         org_weight['org'] * py.array([org_weight['org_paragraph'], org_weight['org_essay'], org_weight['org_coherence'], org_weight['org_quantity']]),
-                         cont_weight['con'] * py.array([cont_weight['con_clearance'], cont_weight['con_novelty'], cont_weight['con_prompt'], cont_weight['con_description']])]
+            exp_weight, org_weight, cont_weight = data['weight']['exp'], data['weight']['org'], data['weight']['cont']
+            # 대분류 가중치를 하위의 소분류 가중치에 곱한다.
+            score_metrics = [exp_weight['exp'] * py.array([exp_weight['exp_grammar'], exp_weight['exp_vocab'], exp_weight['exp_style'], data['corr_count'] * exp_weight['exp_grammar']]),  # 문법 점수 계산에 교정 횟수를 포함
+                             org_weight['org'] * py.array([org_weight['org_paragraph'], org_weight['org_essay'], org_weight['org_coherence'], org_weight['org_quantity']]),
+                             cont_weight['con'] * py.array([cont_weight['con_clearance'], cont_weight['con_novelty'], cont_weight['con_prompt'], cont_weight['con_description']])]
 
-        t = []
-        for score_list in data['score']:
-            t += sum(score_list, [])
+            t = sum(data['score']['exp'], []) + sum(data['score']['org'], []) + sum(data['score']['cont'], [])
+            t = py.array(t)
+
+            x = (xs, score_metrics)
+            args_list.append([x, t])
 
         if save_pickle:
-            args = xs, score_metrics, t
-            save_data(pickle_name, args)
+            save_data(pickle_name, args_list)
 
-        return xs, score_metrics, t
+        return args_list
 
