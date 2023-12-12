@@ -150,7 +150,7 @@ def load_essay_data_list(load_test_data, load_pickle=True):
     return data_list
 
 
-def create_essay_corpus_and_dict(load_pickle=True, batch_size=100):
+def create_essay_corpus_and_dict(load_pickle=True, save_pickle=True, batch_size=100):
     pickle_name = 'corpus_and_dicts.p'
     if load_pickle:
         data = load_data(pickle_name)
@@ -158,23 +158,48 @@ def create_essay_corpus_and_dict(load_pickle=True, batch_size=100):
             return data
 
     essay_data_list = load_essay_data_list(load_test_data=False, load_pickle=True)
-    text_list = []
-    text_batch = []
+    text_list = get_joined_paragraph_text_list(essay_data_list, batch_size)
+
+    corpus, id_to_word, word_to_id = create_corpus_and_dict(text_list)
+    if save_pickle:
+        save_data(pickle_name, (corpus, id_to_word, word_to_id))
+    return corpus, id_to_word, word_to_id
+
+def get_joined_paragraph_text_list(essay_data_list, batch_size=100):
+    """
+    :param essay_data_list: 에세이 json 파일을 불러온 딕셔너리 리스트
+    :param batch_size: 몇 개의 paragraph마다 하나로 묶을지
+    :return: paragraph 문자열을 batch_size개씩 연결한 문자열들의 리스트
+    """
+    text_list, text_batch = [], []
 
     for essay_data in essay_data_list:
         for paragraph in essay_data['paragraph']:
             text = paragraph['paragraph_txt'].replace('\n', '').replace('\r', '').replace('\t', '')
             text_batch += text.split('#@문장구분#')[0:-1]
 
-            if len(text_batch) % batch_size == 0 and len(text_batch) != 0:
-                text_list.append(''.join(text_batch))
-                text_batch = []
+            if len(text_batch) >= batch_size:
+                text_list.append(''.join(text_batch[:batch_size]))
+                text_batch = text_batch[batch_size:]
+
     text_list.append(''.join(text_batch))
 
-    corpus, id_to_word, word_to_id = create_corpus_and_dict(text_list)
-    save_data(pickle_name, (corpus, id_to_word, word_to_id))
-    return corpus, id_to_word, word_to_id
+def paragraph_text_to_ids(text_list, word_to_id):
+    word_ids = []
+    unknown_token_id = word_to_id.get('<UNK>', len(word_to_id))
 
+    for i, text in enumerate(text_list):
+        print('Converting text to ids[%d/%d]' % (i, len(text_list)))
+        try:
+            parsed_text = text_parser.morphs(text)
+        except UnicodeDecodeError:
+            print('Error while parsing text[%d/%d]' % (i, len(text_list)))
+            continue
+
+        for word in parsed_text:
+            word_ids.append(word_to_id.get(word, unknown_token_id))
+
+    return py.array(word_ids)
 
 def get_processed_essay_data(load_test_data, word_to_id, load_pickle=False, max_count=None, shuffle=False):
     pickle_name = 'processed_essay_data_' + ('test.p' if load_test_data else 'train.p')

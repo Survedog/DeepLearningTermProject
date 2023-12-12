@@ -42,6 +42,7 @@ if __name__ == '__main__':
         print('Loading params...')
         model.load_params()
 
+    # 학습
     if do_fitting:
         print('Fitting model...')
         trainer.fit(x=context,
@@ -55,6 +56,7 @@ if __name__ == '__main__':
             print('Saving params...')
             model.save_params()
 
+    # 평가
     eval_max_iter = 100
     total_correct_count = 0
     question_per_iter = 100

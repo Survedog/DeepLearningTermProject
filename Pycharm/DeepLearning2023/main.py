@@ -24,8 +24,9 @@ if __name__ == '__main__':
     vocab_size = len(id_to_word)
     wordvec_size = embed_weight.shape[-1]
     lstm_hidden_size = 100
-    time_size = 100
+    time_size = 80
 
+    train_data_start = 0
     train_data_size = -1
     test_data_size = 1000
     max_epoch = 5
@@ -41,7 +42,7 @@ if __name__ == '__main__':
     # 학습
     if do_fitting:
         print('Loading train data...')
-        x_list, t_list = EssayEvalModel.get_x_t_list_from_processed_data(train_data_list[:train_data_size], time_size=time_size, load_pickle=False, save_pickle=True)
+        x_list, t_list = EssayEvalModel.get_x_t_list_from_processed_data(train_data_list[train_data_start: train_data_start + train_data_size], time_size=time_size, load_pickle=False, save_pickle=True)
         trainer.fit(x_list, t_list,
                     max_epoch=max_epoch)
         trainer.plot()
