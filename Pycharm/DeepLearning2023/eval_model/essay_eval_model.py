@@ -62,12 +62,13 @@ class EssayEvalModel(LayerBase):
         # todo: hs 값을 평균내볼까?
         rhs = hs.reshape(-1, self.time_size * self.lstm_hidden_size)
 
+        metrics_repeated = []
         for i in range(len(score_metrics)):
-            score_metrics[i] = score_metrics[i][py.newaxis].repeat(rhs.shape[0], axis=0)
+            metrics_repeated.append(score_metrics[i][py.newaxis].repeat(rhs.shape[0], axis=0))
 
-        exp_x = py.hstack((rhs, score_metrics[0]))
-        org_x = py.hstack((rhs, score_metrics[1]))
-        cont_x = py.hstack((rhs, score_metrics[2]))
+        exp_x = py.hstack((rhs, metrics_repeated[0]))
+        org_x = py.hstack((rhs, metrics_repeated[1]))
+        cont_x = py.hstack((rhs, metrics_repeated[2]))
 
         exp_scores = self.exp_affine_layer.forward(exp_x).mean(axis=0)
         org_scores = self.org_affine_layer.forward(org_x).mean(axis=0)
