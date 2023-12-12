@@ -34,7 +34,7 @@ if __name__ == '__main__':
 
     if do_fitting:
         print('Loading train data...')
-        x, t = EssayEvalModel.get_x_t_list_from_processed_data(train_data_list[:100], time_size=time_size, load_pickle=False, save_pickle=True)
+        x, t = EssayEvalModel.get_x_t_list_from_processed_data(train_data_list[:1000], time_size=time_size, load_pickle=False, save_pickle=True)
         trainer.fit(x, t,
                     max_epoch=10)
 

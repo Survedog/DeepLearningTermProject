@@ -116,7 +116,11 @@ class EssayEvalModel(LayerBase):
         x_list, t_list = [], []
 
         for data in data_list:
-            xs = py.array(sum(data['paragraph'], []))
+            try:
+                xs = py.array(sum(data['paragraph'], []))
+            except TypeError:
+                continue  # paragraph를 온전히 가져오지 못한 데이터는 생략한다.
+
             split_amount = math.ceil(len(xs) / time_size)
             xs = py.resize(xs, (1, split_amount * time_size)).reshape(-1, time_size)  # time size에 맞는 크기가 될 때까지 내용을 반복시킨다.
 
