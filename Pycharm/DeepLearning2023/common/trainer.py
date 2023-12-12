@@ -15,7 +15,7 @@ class Trainer:
     def fit(self, x, t, batch_size=100, random_batch=True,
             max_epoch=20, print_info=True, eval_interval=1):
 
-        iters_per_epoch = int(ceil(len(x) / batch_size))
+        iters_per_epoch = self.get_iters_per_epoch(x, batch_size)
         self.loss_list = []
 
         for epoch in range(1, max_epoch + 1):
@@ -46,6 +46,9 @@ class Trainer:
                 self.eval_model(epoch, epoch_total_loss, epoch_loss_count)
 
         print('[Trainer] 최종 손실: %.3f' % (self.loss_list[-1]))
+
+    def get_iters_per_epoch(self, x, batch_size):
+        return ceil(len(x) / batch_size)
 
     def get_batch(self, batch_size, iteration, x, t):
         batch_start = (iteration - 1) * batch_size
@@ -169,6 +172,9 @@ class EssayEvalModelTrainer(Trainer):
                     max_epoch=max_epoch,
                     print_info=print_info,
                     eval_interval=eval_interval)
+
+    def get_iters_per_epoch(self, x, batch_size):
+        return 1
 
     def get_batch(self, batch_size, iteration, x, t):
         return x, t

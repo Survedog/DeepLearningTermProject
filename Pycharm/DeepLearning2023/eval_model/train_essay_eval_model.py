@@ -40,8 +40,6 @@ if __name__ == '__main__':
         for (x, t) in x_t_list:
             train_count += 1
             trainer.fit(x, t,
-                        batch_size=1,
-                        random_batch=False,
                         max_epoch=10)
             print('%d번 데이터 학습 완료.' % train_count)
 
