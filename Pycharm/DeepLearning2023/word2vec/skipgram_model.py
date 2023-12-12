@@ -14,8 +14,9 @@ class SkipgramModel(LayerBase):
         self.sample_size = sample_size
         self.target_size = len(weight_out_list)
 
-        distribution = py.bincount(corpus, minlength=vocab_size) / len(corpus)
-        self.negative_sampler = NegativeSampler(py.unique(corpus), distribution)
+        corpus_value_space = py.unique(corpus)
+        distribution = py.bincount(corpus, minlength=len(corpus_value_space)) / len(corpus)
+        self.negative_sampler = NegativeSampler(corpus_value_space, distribution)
 
         self.loss_layer = SigmoidWithLossLayer()
         self.embed_in_layer = EmbeddingLayer(weight_in)
@@ -31,6 +32,7 @@ class SkipgramModel(LayerBase):
             self.grads.append(self.embed_dot_layers[i].grads[0])
 
         self.default_params_pickle_name = 'skipgram_params.p'
+        self.loss_shape = None
 
     def predict(self, context):
         batch_size = context.shape[0]
@@ -55,9 +57,13 @@ class SkipgramModel(LayerBase):
 
         sample_loss /= self.target_size
         avg_loss = py.average(sample_loss, axis=1)
+
+        self.loss_shape = avg_loss.shape
         return avg_loss
 
-    def backward(self, dout):
+    def backward(self, dout=1):
+        dout = py.ones(self.loss_shape) * dout
+
         davg_loss = dout.reshape(-1, 1)
         dsample_loss = py.repeat(davg_loss, self.sample_size, axis=1) / self.sample_size
         dscore = self.loss_layer.backward(dsample_loss / self.target_size)

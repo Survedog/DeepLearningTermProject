@@ -30,7 +30,7 @@ if __name__ == '__main__':
     max_epoch = 5
     batch_size = 10000
     do_fitting = True
-    continue_from_last_fit = True
+    continue_from_last_fit = False
     save_params = False
 
     print('Creating model...')

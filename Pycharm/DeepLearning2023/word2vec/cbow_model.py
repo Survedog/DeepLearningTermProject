@@ -18,8 +18,9 @@ class CBowModel(LayerBase):
         self.embed_dot_layer = EmbeddingDotLayer(weight_out)
         self.loss_layer = SigmoidWithLossLayer()
 
-        distribution = py.bincount(corpus, minlength=vocab_size) / len(corpus)
-        self.negative_sampler = NegativeSampler(py.unique(corpus), distribution)
+        corpus_value_space = py.unique(corpus)
+        distribution = py.bincount(corpus, minlength=len(corpus_value_space)) / len(corpus)
+        self.negative_sampler = NegativeSampler(corpus_value_space, distribution)
 
         self.params.append(weight_in)
         self.params.append(weight_out)
@@ -27,6 +28,7 @@ class CBowModel(LayerBase):
         self.grads.append(self.embed_dot_layer.grads[0])
 
         self.default_params_pickle_name = 'cbow_params.p'
+        self.loss_shape = None
 
     def calc_hidden(self, contexts):
         self.context_size = contexts.shape[1]
@@ -47,9 +49,13 @@ class CBowModel(LayerBase):
 
         sample_loss = self.loss_layer.forward(sample_scores, sample_labels)
         avg_loss = py.average(sample_loss, axis=1)
+
+        self.loss_shape = avg_loss.shape
         return avg_loss
 
-    def backward(self, dout):
+    def backward(self, dout=1):
+        dout = py.ones(self.loss_shape) * dout
+
         davg_loss = dout.reshape(-1, 1)
         dsample_loss = py.repeat(davg_loss, self.sample_size, axis=1) / self.sample_size
         dscore = self.loss_layer.backward(dsample_loss)

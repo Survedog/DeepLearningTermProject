@@ -22,8 +22,7 @@ class CBowModelTests(unittest.TestCase):
                          weight_out=weight_out)
 
         cbow.forward(contexts[0:1], true_label[0:1])
-        dout = py.ones(1)
-        cbow.backward(dout)
+        cbow.backward()
         dWin, dWout = cbow.grads[0], cbow.grads[1]
 
         # dWin에서 입력 문맥의 기울기만 갱신되는지 확인
@@ -35,8 +34,7 @@ class CBowModelTests(unittest.TestCase):
 
         # 배치 입력의 경우
         cbow.forward(contexts[0:3], true_label[0:3])
-        dout = py.ones(3)
-        cbow.backward(dout)
+        cbow.backward()
         dWin, dWout = cbow.grads[0], cbow.grads[1]
 
         # 형상 일치 확인

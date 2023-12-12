@@ -23,8 +23,7 @@ class SkipgramModelTests(unittest.TestCase):
                                  weight_out_list=weight_out_list)
 
         skipgram.forward(context[0:1], targets[0:1])
-        dout = py.ones(1)
-        skipgram.backward(dout)
+        skipgram.backward()
         dWin, *dWout_list = skipgram.grads
 
         # 형상 일치 확인
@@ -41,8 +40,7 @@ class SkipgramModelTests(unittest.TestCase):
 
         # 배치 입력의 경우
         skipgram.forward(context[0:3], targets[0:3])
-        dout = py.ones(3)
-        skipgram.backward(dout)
+        skipgram.backward()
         dWin, *dWout_list = skipgram.grads
 
         # 형상 일치 확인
