@@ -16,9 +16,9 @@ if __name__ == '__main__':
 
     train_data_list = get_processed_essay_data(load_test_data=False, word_to_id=word_to_id, load_pickle=True)
 
-    do_fitting = True
+    do_fitting = False
     load_saved_param = True
-    save_param = True
+    save_param = False
 
     vocab_size = len(id_to_word)
     wordvec_size = 100
@@ -27,7 +27,7 @@ if __name__ == '__main__':
 
     train_data_size = 10000
     test_data_size = 1000
-    max_epoch = 5
+    max_epoch = 3
 
     print('Creating model...')
     eval_model = EssayEvalModel(vocab_size, wordvec_size, hidden_size, time_size)
@@ -40,7 +40,7 @@ if __name__ == '__main__':
     # 학습
     if do_fitting:
         print('Loading train data...')
-        x_list, t_list = EssayEvalModel.get_x_t_list_from_processed_data(train_data_list[10000:10000 + train_data_size], time_size=time_size, load_pickle=False, save_pickle=True)
+        x_list, t_list = EssayEvalModel.get_x_t_list_from_processed_data(train_data_list[: train_data_size], time_size=time_size, load_pickle=False, save_pickle=True)
         trainer.fit(x_list, t_list,
                     max_epoch=max_epoch)
         trainer.plot()
@@ -67,3 +67,11 @@ if __name__ == '__main__':
         loss_count += 1
 
     print('Final Test Loss: %.2f' % (total_loss / loss_count))
+
+    # 예측 값
+    predict_count = 10
+
+    for x, t in zip(x_list[:predict_count], t_list[:predict_count]):
+        eval_model.reset_state()
+        prediction = eval_model.predict(x)
+        print('Diff:', prediction - t)
