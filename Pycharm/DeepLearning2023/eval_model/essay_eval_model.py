@@ -2,6 +2,7 @@ from common.base_layer import LayerBase
 from common.affine_layer import AffineLayer
 from common.utils import py, load_data, save_data
 from common.loss_layers import SSELossLayer
+from common.dropout_layer import DropOutLayer
 from lang_model.time_rnn_layers import TimeLSTMLayer
 from lang_model.time_embedding_layer import TimeEmbeddingLayer
 import math
@@ -9,7 +10,7 @@ import math
 
 class EssayEvalModel(LayerBase):
 
-    def __init__(self, vocab_size, wordvec_size=100, lstm_hidden_size=30, time_size=50, embed_weight=None):
+    def __init__(self, vocab_size, wordvec_size=100, lstm_hidden_size=30, time_size=50, dropout_rate=0.5, embed_weight=None):
         super().__init__()
         self.cache = None
 
@@ -39,26 +40,39 @@ class EssayEvalModel(LayerBase):
         cont_affine_weight = randn(affine_input_size, cont_metrics_amount * 3, dtype='f')
         cont_affine_bias = randn(cont_metrics_amount * 3, dtype='f')
 
+        self.dropout_layers = []
+
         self.time_embedding_layer = TimeEmbeddingLayer(embed_weight)
+        self.dropout_layers.append(DropOutLayer(dropout_rate))
         self.time_lstm_layer = TimeLSTMLayer(lstm_weight_x, lstm_weight_h, lstm_bias)
+        self.dropout_layers.append(DropOutLayer(dropout_rate))
         self.exp_affine_layer = AffineLayer(exp_affine_weight, exp_affine_bias)
         self.org_affine_layer = AffineLayer(org_affine_weight, org_affine_bias)
         self.cont_affine_layer = AffineLayer(cont_affine_weight, cont_affine_bias)
 
         self.loss_layer = SSELossLayer()
-        self.layers = [self.time_embedding_layer, self.time_lstm_layer, self.exp_affine_layer, self.org_affine_layer, self.cont_affine_layer]
+        self.layers = [self.time_embedding_layer,
+                       self.dropout_layers[0],
+                       self.time_lstm_layer,
+                       self.dropout_layers[1],
+                       self.exp_affine_layer,
+                       self.org_affine_layer,
+                       self.cont_affine_layer]
 
         for i in range(fit_from, len(self.layers)):
             layer = self.layers[i]
             self.params += layer.params
             self.grads += layer.grads
 
-    def predict(self, x):
+    def predict(self, x, train_flag=True):
         xs, score_metrics = x
 
         embed_xs = self.time_embedding_layer.forward(xs)
+        embed_xs = self.dropout_layers[0].forward(embed_xs, train_flag)
+
         self.time_lstm_layer.reset_state()
         hs = self.time_lstm_layer.forward(embed_xs)
+        hs = self.dropout_layers[1].forward(hs, train_flag)
         # todo: hs 값을 평균내볼까?
         rhs = hs.reshape(-1, self.time_size * self.lstm_hidden_size)
 
@@ -78,8 +92,8 @@ class EssayEvalModel(LayerBase):
         scores = py.hstack((exp_scores, org_scores, cont_scores))
         return scores
 
-    def forward(self, x, t):
-        scores = self.predict(x)
+    def forward(self, x, t, train_flag=True):
+        scores = self.predict(x, train_flag)
         loss = self.loss_layer.forward(scores, t)
         return loss
 
@@ -98,9 +112,11 @@ class EssayEvalModel(LayerBase):
         drhs += self.cont_affine_layer.backward(dcont_scores)[:, :rhs_shape[-1]]
 
         dhs = drhs.reshape(hs_shape)
-        dembed_xs = self.time_lstm_layer.backward(dhs)
-        self.time_embedding_layer.backward(dembed_xs)
+        dhs = self.dropout_layers[1].backward(dhs)
 
+        dembed_xs = self.time_lstm_layer.backward(dhs)
+        dembed_xs = self.dropout_layers[0].backward(dembed_xs)
+        self.time_embedding_layer.backward(dembed_xs)
 
     def reset_state(self):
         self.time_lstm_layer.reset_state()
