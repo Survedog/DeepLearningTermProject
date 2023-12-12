@@ -150,14 +150,14 @@ def load_essay_data_list(load_test_data, load_pickle=True):
     return data_list
 
 
-def create_essay_corpus_and_dict(load_pickle=True, load_test_data=False, batch_size=100):
-    pickle_name = 'corpus_and_dicts_' + ('test.p' if load_test_data else 'train.p')
+def create_essay_corpus_and_dict(load_pickle=True, batch_size=100):
+    pickle_name = 'corpus_and_dicts.p'
     if load_pickle:
         data = load_data(pickle_name)
         if data is not None:
             return data
 
-    essay_data_list = load_essay_data_list(load_test_data=load_test_data, load_pickle=True)
+    essay_data_list = load_essay_data_list(load_test_data=False, load_pickle=True)
     text_list = []
     text_batch = []
 
