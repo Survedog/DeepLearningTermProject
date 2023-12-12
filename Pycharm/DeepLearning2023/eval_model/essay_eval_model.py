@@ -2,12 +2,13 @@ from common.base_layer import LayerBase
 from common.affine_layer import AffineLayer
 from common.utils import py, load_data, save_data
 from common.loss_layers import SSELossLayer
+from lang_model.time_rnn_layers import TimeLSTMLayer
 import math
 
 
 class EssayEvalModel(LayerBase):
 
-    def __init__(self, rnn_model, time_size=50, fit_premade_models=False):
+    def __init__(self, wordvec_size=100, lstm_hidden_size=100, time_size=50):
         super().__init__()
         self.cache = None
 
@@ -15,6 +16,9 @@ class EssayEvalModel(LayerBase):
         exp_metrics_amount, org_metrics_amount, cont_metrics_amount = 3, 4, 4
 
         randn = py.random.randn
+        lstm_weight_x = py.random.randn(wordvec_size, 4 * lstm_hidden_size, dtype='f') / py.sqrt(wordvec_size)
+        lstm_weight_h = py.random.randn(lstm_hidden_size, 4 * lstm_hidden_size, dtype='f') / py.sqrt(lstm_hidden_size)
+        lstm_bias = py.zeros(4 * lstm_hidden_size, dtype='f')
         exp_affine_weight = randn(affine_input_size, exp_metrics_amount * 3, dtype='f')
         exp_affine_bias = randn(exp_metrics_amount * 3, dtype='f')
         org_affine_weight = randn(affine_input_size, org_metrics_amount * 3, dtype='f')
@@ -22,27 +26,21 @@ class EssayEvalModel(LayerBase):
         cont_affine_weight = randn(affine_input_size, cont_metrics_amount * 3, dtype='f')
         cont_affine_bias = randn(cont_metrics_amount * 3, dtype='f')
 
-        self.rnn_model = rnn_model
+        self.time_lstm_layer = TimeLSTMLayer(lstm_weight_x, lstm_weight_h, lstm_bias)
         self.exp_affine_layer = AffineLayer(exp_affine_weight, exp_affine_bias)
         self.org_affine_layer = AffineLayer(org_affine_weight, org_affine_bias)
         self.cont_affine_layer = AffineLayer(cont_affine_weight, cont_affine_bias)
 
-        self.layers = [self.rnn_model, self.org_affine_layer, self.cont_affine_layer, self.exp_affine_layer]
+        self.layers = [self.time_lstm_layer, self.org_affine_layer, self.cont_affine_layer, self.exp_affine_layer]
         self.loss_layer = SSELossLayer()
 
-        train_from = 0
-        if not fit_premade_models:
-            train_from = 1
-
-        for i in range(train_from, len(self.layers)):
-            layer = self.layers[i]
+        for layer in self.layers:
             self.params += layer.params
             self.grads += layer.grads
 
-
     def predict(self, x):
         xs, score_metrics = x
-        hs = self.rnn_model.predict(xs)
+        hs = self.time_lstm_layer.predict(xs)
         fhs = hs.flatten()
 
         org_x = py.hstack((fhs, score_metrics[0]))
@@ -73,10 +71,10 @@ class EssayEvalModel(LayerBase):
         dhs += self.org_affine_layer.backward(dscore)[:fhs_len]
 
         dhs = dhs.reshape(hs_shape)
-        self.rnn_model.backward(dhs)
+        self.time_lstm_layer.backward(dhs)
 
     def reset_state(self):
-        self.rnn_model.reset_state()
+        self.time_lstm_layer.reset_state()
 
     # todo: 데이터 스케일 전처리
     @classmethod
