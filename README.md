@@ -16,6 +16,6 @@
 - https://www.youtube.com/watch?v=IET9IkfQIKE&ab_channel=NIAAIHub
 - json 데이터를 다음의 경로에 넣어야 함.
    - '01.데이터\1.Training\라벨링데이터'에 위치한 압축 파일들을 아래 경로에서 압축 해제.
-      - DeepLearningTermProject\data\test_data
+      - DeepLearningTermProject\data\train_data
    - 01.데이터\2.Validation\라벨링데이터에 위치한 압축 파일들을 아래 경로에 압축 해제.
-      - DeepLearningTermProject\data\train_data      
+      - DeepLearningTermProject\data\test_data
