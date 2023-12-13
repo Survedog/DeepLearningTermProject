@@ -27,23 +27,20 @@ class EssayEvalModel2(LayerBase):
             self.default_params_pickle_name = 'essay_eval_model_2_params.p'
             fit_from = 1
 
-        lstm1_weight_x = py.random.randn(wordvec_size, 4 * lstm1_hidden_size, dtype='f') / py.sqrt(wordvec_size)
-        lstm1_weight_h = py.random.randn(lstm1_hidden_size, 4 * lstm1_hidden_size, dtype='f') / py.sqrt(lstm1_hidden_size)
+        lstm1_weight_x = randn(wordvec_size, 4 * lstm1_hidden_size, dtype='f') / py.sqrt(wordvec_size)
+        lstm1_weight_h = randn(lstm1_hidden_size, 4 * lstm1_hidden_size, dtype='f') / py.sqrt(lstm1_hidden_size)
         lstm1_bias = py.zeros(4 * lstm1_hidden_size, dtype='f')
 
-        lstm2_weight_x = py.random.randn(lstm1_hidden_size, 4 * lstm2_hidden_size, dtype='f') / py.sqrt(lstm1_hidden_size)
-        lstm2_weight_h = py.random.randn(lstm2_hidden_size, 4 * lstm2_hidden_size, dtype='f') / py.sqrt(lstm2_hidden_size)
+        lstm2_weight_x = randn(lstm1_hidden_size, 4 * lstm2_hidden_size, dtype='f') / py.sqrt(lstm1_hidden_size)
+        lstm2_weight_h = randn(lstm2_hidden_size, 4 * lstm2_hidden_size, dtype='f') / py.sqrt(lstm2_hidden_size)
         lstm2_bias = py.zeros(4 * lstm2_hidden_size, dtype='f')
 
-        affine_input_size = lstm2_hidden_size + 4
-        exp_criteria_amount, org_criteria_amount, cont_criteria_amount = 3, 4, 4
+        measures_size = 12
+        affine_input_size = lstm2_hidden_size + measures_size
+        criteria_amount = 11
 
-        exp_affine_weight = randn(affine_input_size, exp_criteria_amount * 3, dtype='f')
-        exp_affine_bias = randn(exp_criteria_amount * 3, dtype='f')
-        org_affine_weight = randn(affine_input_size, org_criteria_amount * 3, dtype='f')
-        org_affine_bias = randn(org_criteria_amount * 3, dtype='f')
-        cont_affine_weight = randn(affine_input_size, cont_criteria_amount * 3, dtype='f')
-        cont_affine_bias = randn(cont_criteria_amount * 3, dtype='f')
+        affine_weight = randn(affine_input_size, criteria_amount * 3, dtype='f')
+        affine_bias = randn(criteria_amount * 3, dtype='f')
 
         self.dropout_layers, self.time_lstm_layers = [], []
 
@@ -53,9 +50,7 @@ class EssayEvalModel2(LayerBase):
         self.dropout_layers.append(DropOutLayer(dropout_rate))
         self.time_lstm_layers.append(TimeLSTMLayer(lstm2_weight_x, lstm2_weight_h, lstm2_bias))
         self.dropout_layers.append(DropOutLayer(dropout_rate))
-        self.exp_affine_layer = AffineLayer(exp_affine_weight, exp_affine_bias)
-        self.org_affine_layer = AffineLayer(org_affine_weight, org_affine_bias)
-        self.cont_affine_layer = AffineLayer(cont_affine_weight, cont_affine_bias)
+        self.affine_layer = AffineLayer(affine_weight, affine_bias)
 
         self.loss_layer = SSELossLayer()
         self.layers = [self.time_embedding_layer,
@@ -64,9 +59,7 @@ class EssayEvalModel2(LayerBase):
                        self.dropout_layers[1],
                        self.time_lstm_layers[1],
                        self.dropout_layers[2],
-                       self.exp_affine_layer,
-                       self.org_affine_layer,
-                       self.cont_affine_layer]
+                       self.affine_layer]
 
         for i in range(fit_from, len(self.layers)):
             layer = self.layers[i]
@@ -88,20 +81,12 @@ class EssayEvalModel2(LayerBase):
         hs2 = self.dropout_layers[2].forward(hs2, train_flag)
         rhs = hs2.reshape(-1, self.lstm2_hidden_size)
 
-        measures_repeated = []
-        for i in range(len(measures)):
-            measures_repeated.append(measures[i][py.newaxis].repeat(rhs.shape[0], axis=0))
-
-        exp_x = py.hstack((rhs, measures_repeated[0]))
-        org_x = py.hstack((rhs, measures_repeated[1]))
-        cont_x = py.hstack((rhs, measures_repeated[2]))
-
-        exp_scores = self.exp_affine_layer.forward(exp_x).mean(axis=0)
-        org_scores = self.org_affine_layer.forward(org_x).mean(axis=0)
-        cont_scores = self.cont_affine_layer.forward(cont_x).mean(axis=0)
+        measures = py.hstack((measures[0], measures[1], measures[2]))
+        measures_repeated = measures[py.newaxis].repeat(rhs.shape[0], axis=0)
+        x = py.hstack((rhs, measures_repeated))
+        scores = self.affine_layer.forward(x).mean(axis=0)
 
         self.cache = (hs1.shape, hs2.shape, rhs.shape)
-        scores = py.hstack((exp_scores, org_scores, cont_scores))
         return scores
 
     def forward(self, x, t, train_flag=True):
@@ -112,17 +97,10 @@ class EssayEvalModel2(LayerBase):
     def backward(self, dout=1):
         hs1_shape, hs2_shape, rhs_shape = self.cache
 
-        dscore = self.loss_layer.backward(dout)
+        dscores = self.loss_layer.backward(dout)
+        dscores = dscores[py.newaxis].repeat(rhs_shape[0], axis=0) / rhs_shape[0]
 
-        dexp_scores = dscore[:9][py.newaxis].repeat(rhs_shape[0], axis=0) / rhs_shape[0]
-        dorg_scores = dscore[9:21][py.newaxis].repeat(rhs_shape[0], axis=0) / rhs_shape[0]
-        dcont_scores = dscore[21:33][py.newaxis].repeat(rhs_shape[0], axis=0) / rhs_shape[0]
-
-        drhs = py.zeros(rhs_shape, dtype='f')
-        drhs += self.exp_affine_layer.backward(dexp_scores)[:, :rhs_shape[-1]]
-        drhs += self.org_affine_layer.backward(dorg_scores)[:, :rhs_shape[-1]]
-        drhs += self.cont_affine_layer.backward(dcont_scores)[:, :rhs_shape[-1]]
-
+        drhs = self.affine_layer.backward(dscores)[:, :rhs_shape[-1]]
         dhs2 = drhs.reshape(hs2_shape)
         dhs2 = self.dropout_layers[2].backward(dhs2)
 
@@ -158,8 +136,8 @@ class EssayEvalModel2(LayerBase):
             exp_weight, org_weight, cont_weight = data['weight']['exp'], data['weight']['org'], data['weight']['cont']
             # 대분류 가중치를 하위의 소분류 가중치에 곱한다.
             measures = [exp_weight['exp'] * py.array([exp_weight['exp_grammar'], exp_weight['exp_vocab'], exp_weight['exp_style'], data['corr_count'] * exp_weight['exp_grammar']]),  # 문법 점수 계산에 교정 횟수를 포함
-                             org_weight['org'] * py.array([org_weight['org_paragraph'], org_weight['org_essay'], org_weight['org_coherence'], org_weight['org_quantity']]),
-                             cont_weight['con'] * py.array([cont_weight['con_clearance'], cont_weight['con_novelty'], cont_weight['con_prompt'], cont_weight['con_description']])]
+                        org_weight['org'] * py.array([org_weight['org_paragraph'], org_weight['org_essay'], org_weight['org_coherence'], org_weight['org_quantity']]),
+                        cont_weight['con'] * py.array([cont_weight['con_clearance'], cont_weight['con_novelty'], cont_weight['con_prompt'], cont_weight['con_description']])]
 
             t = sum(data['score']['exp'], []) + sum(data['score']['org'], []) + sum(data['score']['cont'], [])
             t = py.array(t)
