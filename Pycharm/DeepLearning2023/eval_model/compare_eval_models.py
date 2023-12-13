@@ -30,7 +30,7 @@ if __name__ == '__main__':
     train_data_start = 0
     train_data_size = 1000
     test_data_size = 1000
-    max_epoch = 4
+    train_max_count = 4
     save_param = True
 
     test_plot_x = []
@@ -45,11 +45,11 @@ if __name__ == '__main__':
     trainer1 = EssayEvalModelTrainer(eval_model1, optimizer1)
     trainer2 = EssayEvalModelTrainer(eval_model2, optimizer2)
 
-    for epoch in range(max_epoch):
+    for train_count in range(train_max_count):
         train_data_start += train_data_size
 
         print('Loading train data...')
-        x_train, t_train = EssayEvalModel.get_x_t_list_from_processed_data(train_data_list[train_data_start: train_data_start + train_data_size], time_size=time_size, load_pickle=False, save_pickle=True)
+        x_train, t_train = EssayEvalModel.get_x_t_list_from_processed_data(train_data_list[train_data_start: train_data_start + train_data_size], time_size=time_size, load_pickle=False, save_pickle=False)
         x_test, t_test = EssayEvalModel.get_x_t_list_from_processed_data(test_data_list[:test_data_size], time_size=time_size, load_pickle=False, save_pickle=False)
 
         print('Start fitting...')
