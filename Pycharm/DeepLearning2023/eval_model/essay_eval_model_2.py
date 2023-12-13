@@ -10,27 +10,32 @@ import math
 
 class EssayEvalModel2(LayerBase):
 
-    def __init__(self, vocab_size, wordvec_size=100, lstm_hidden_size=30, time_size=50, dropout_rate=0.5, embed_weight=None):
+    def __init__(self, vocab_size, wordvec_size=100, lstm1_hidden_size=30, lstm2_hidden_size=10, time_size=50, dropout_rate=0.3, embed_weight=None):
         super().__init__()
         self.cache = None
 
         self.time_size = time_size
-        self.lstm_hidden_size = lstm_hidden_size
+        self.lstm1_hidden_size = lstm1_hidden_size
+        self.lstm2_hidden_size = lstm2_hidden_size
 
         randn = py.random.randn
         if embed_weight is None:
             embed_weight = randn(vocab_size, wordvec_size, dtype='f') / 100
-            self.default_params_pickle_name = 'essay_eval_model_params_w_embed_weight.p'
+            self.default_params_pickle_name = 'essay_eval_model_2_params_w_embed_weight.p'
             fit_from = 0
         else:
-            self.default_params_pickle_name = 'essay_eval_model_params.p'
+            self.default_params_pickle_name = 'essay_eval_model_2_params.p'
             fit_from = 1
 
-        lstm_weight_x = py.random.randn(wordvec_size, 4 * lstm_hidden_size, dtype='f') / py.sqrt(wordvec_size)
-        lstm_weight_h = py.random.randn(lstm_hidden_size, 4 * lstm_hidden_size, dtype='f') / py.sqrt(lstm_hidden_size)
-        lstm_bias = py.zeros(4 * lstm_hidden_size, dtype='f')
+        lstm1_weight_x = py.random.randn(wordvec_size, 4 * lstm1_hidden_size, dtype='f') / py.sqrt(wordvec_size)
+        lstm1_weight_h = py.random.randn(lstm1_hidden_size, 4 * lstm1_hidden_size, dtype='f') / py.sqrt(lstm1_hidden_size)
+        lstm1_bias = py.zeros(4 * lstm1_hidden_size, dtype='f')
 
-        affine_input_size = lstm_hidden_size + 4
+        lstm2_weight_x = py.random.randn(lstm1_hidden_size, 4 * lstm2_hidden_size, dtype='f') / py.sqrt(lstm1_hidden_size)
+        lstm2_weight_h = py.random.randn(lstm2_hidden_size, 4 * lstm2_hidden_size, dtype='f') / py.sqrt(lstm2_hidden_size)
+        lstm2_bias = py.zeros(4 * lstm2_hidden_size, dtype='f')
+
+        affine_input_size = lstm2_hidden_size + 4
         exp_criteria_amount, org_criteria_amount, cont_criteria_amount = 3, 4, 4
 
         exp_affine_weight = randn(affine_input_size, exp_criteria_amount * 3, dtype='f')
@@ -40,11 +45,13 @@ class EssayEvalModel2(LayerBase):
         cont_affine_weight = randn(affine_input_size, cont_criteria_amount * 3, dtype='f')
         cont_affine_bias = randn(cont_criteria_amount * 3, dtype='f')
 
-        self.dropout_layers = []
+        self.dropout_layers, self.time_lstm_layers = [], []
 
         self.time_embedding_layer = TimeEmbeddingLayer(embed_weight)
         self.dropout_layers.append(DropOutLayer(dropout_rate))
-        self.time_lstm_layer = TimeLSTMLayer(lstm_weight_x, lstm_weight_h, lstm_bias)
+        self.time_lstm_layers.append(TimeLSTMLayer(lstm1_weight_x, lstm1_weight_h, lstm1_bias))
+        self.dropout_layers.append(DropOutLayer(dropout_rate))
+        self.time_lstm_layers.append(TimeLSTMLayer(lstm2_weight_x, lstm2_weight_h, lstm2_bias))
         self.dropout_layers.append(DropOutLayer(dropout_rate))
         self.exp_affine_layer = AffineLayer(exp_affine_weight, exp_affine_bias)
         self.org_affine_layer = AffineLayer(org_affine_weight, org_affine_bias)
@@ -53,8 +60,10 @@ class EssayEvalModel2(LayerBase):
         self.loss_layer = SSELossLayer()
         self.layers = [self.time_embedding_layer,
                        self.dropout_layers[0],
-                       self.time_lstm_layer,
+                       self.time_lstm_layers[0],
                        self.dropout_layers[1],
+                       self.time_lstm_layers[1],
+                       self.dropout_layers[2],
                        self.exp_affine_layer,
                        self.org_affine_layer,
                        self.cont_affine_layer]
@@ -70,10 +79,14 @@ class EssayEvalModel2(LayerBase):
         embed_xs = self.time_embedding_layer.forward(xs)
         embed_xs = self.dropout_layers[0].forward(embed_xs, train_flag)
 
-        self.time_lstm_layer.reset_state()
-        hs = self.time_lstm_layer.forward(embed_xs)
-        hs = self.dropout_layers[1].forward(hs, train_flag)
-        rhs = hs.reshape(-1, self.lstm_hidden_size)
+        self.time_lstm_layers[0].reset_state()
+        hs1 = self.time_lstm_layers[0].forward(embed_xs)
+        hs1 = self.dropout_layers[1].forward(hs1, train_flag)
+
+        self.time_lstm_layers[1].reset_state()
+        hs2 = self.time_lstm_layers[1].forward(hs1)
+        hs2 = self.dropout_layers[2].forward(hs2, train_flag)
+        rhs = hs2.reshape(-1, self.lstm2_hidden_size)
 
         measures_repeated = []
         for i in range(len(measures)):
@@ -87,7 +100,7 @@ class EssayEvalModel2(LayerBase):
         org_scores = self.org_affine_layer.forward(org_x).mean(axis=0)
         cont_scores = self.cont_affine_layer.forward(cont_x).mean(axis=0)
 
-        self.cache = (hs.shape, rhs.shape)
+        self.cache = (hs1.shape, hs2.shape, rhs.shape)
         scores = py.hstack((exp_scores, org_scores, cont_scores))
         return scores
 
@@ -97,7 +110,7 @@ class EssayEvalModel2(LayerBase):
         return loss
 
     def backward(self, dout=1):
-        hs_shape, rhs_shape = self.cache
+        hs1_shape, hs2_shape, rhs_shape = self.cache
 
         dscore = self.loss_layer.backward(dout)
 
@@ -110,17 +123,20 @@ class EssayEvalModel2(LayerBase):
         drhs += self.org_affine_layer.backward(dorg_scores)[:, :rhs_shape[-1]]
         drhs += self.cont_affine_layer.backward(dcont_scores)[:, :rhs_shape[-1]]
 
-        dhs = drhs.reshape(hs_shape)
-        dhs = self.dropout_layers[1].backward(dhs)
+        dhs2 = drhs.reshape(hs2_shape)
+        dhs2 = self.dropout_layers[2].backward(dhs2)
 
-        dembed_xs = self.time_lstm_layer.backward(dhs)
+        dhs1 = self.time_lstm_layers[1].backward(dhs2)
+        dhs1 = self.dropout_layers[1].backward(dhs1)
+
+        dembed_xs = self.time_lstm_layers[0].backward(dhs1)
         dembed_xs = self.dropout_layers[0].backward(dembed_xs)
         self.time_embedding_layer.backward(dembed_xs)
 
     def reset_state(self):
-        self.time_lstm_layer.reset_state()
+        for layer in self.time_lstm_layers:
+            layer.reset_state()
 
-    # todo: 데이터 스케일 전처리
     @classmethod
     def get_x_t_list_from_processed_data(cls, data_list, time_size, load_pickle=True, save_pickle=False, pickle_name='eval_model_args.p'):
         if load_pickle:
