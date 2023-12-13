@@ -81,4 +81,4 @@ if __name__ == '__main__':
         total_diff += prediction - t
 
     print('[평균 오차]\n', (total_diff / predict_count))
-    print('[평균 오차 단일값] %2.f\n' % (total_diff / predict_count).mean())
+    print('[평균 오차 단일값] %.2f\n' % (total_diff / predict_count).mean())
