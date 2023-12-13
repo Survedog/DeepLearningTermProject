@@ -19,3 +19,5 @@
       - DeepLearningTermProject\data\train_data
    - 01.데이터\2.Validation\라벨링데이터에 위치한 압축 파일들을 아래 경로에 압축 해제.
       - DeepLearningTermProject\data\test_data
+
+DeepLearningTermProject\Pycharm\DeepLearning2023\main.py에서 에세이 평가 모델 학습과 평가를 수행함.
