@@ -72,9 +72,13 @@ if __name__ == '__main__':
     print('Final Test Loss: %.2f' % (total_loss / loss_count))
 
     # 예측 값
-    predict_count = 10
+    predict_count = 1000
 
+    total_diff = 0
     for x, t in zip(x_list[:predict_count], t_list[:predict_count]):
         eval_model.reset_state()
         prediction = eval_model.predict(x, train_flag=False)
-        print('Diff:', prediction - t)
+        total_diff += prediction - t
+
+    print('[평균 오차]\n', (total_diff / predict_count))
+    print('[평균 오차 단일값] %2.f\n' % (total_diff / predict_count).mean())
