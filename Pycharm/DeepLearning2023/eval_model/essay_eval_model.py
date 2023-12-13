@@ -30,15 +30,15 @@ class EssayEvalModel(LayerBase):
         lstm_weight_h = py.random.randn(lstm_hidden_size, 4 * lstm_hidden_size, dtype='f') / py.sqrt(lstm_hidden_size)
         lstm_bias = py.zeros(4 * lstm_hidden_size, dtype='f')
 
-        affine_input_size = time_size * lstm_hidden_size + 4
-        exp_metrics_amount, org_metrics_amount, cont_metrics_amount = 3, 4, 4
+        affine_input_size = lstm_hidden_size + 4
+        exp_criteria_amount, org_criteria_amount, cont_criteria_amount = 3, 4, 4
 
-        exp_affine_weight = randn(affine_input_size, exp_metrics_amount * 3, dtype='f')
-        exp_affine_bias = randn(exp_metrics_amount * 3, dtype='f')
-        org_affine_weight = randn(affine_input_size, org_metrics_amount * 3, dtype='f')
-        org_affine_bias = randn(org_metrics_amount * 3, dtype='f')
-        cont_affine_weight = randn(affine_input_size, cont_metrics_amount * 3, dtype='f')
-        cont_affine_bias = randn(cont_metrics_amount * 3, dtype='f')
+        exp_affine_weight = randn(affine_input_size, exp_criteria_amount * 3, dtype='f')
+        exp_affine_bias = randn(exp_criteria_amount * 3, dtype='f')
+        org_affine_weight = randn(affine_input_size, org_criteria_amount * 3, dtype='f')
+        org_affine_bias = randn(org_criteria_amount * 3, dtype='f')
+        cont_affine_weight = randn(affine_input_size, cont_criteria_amount * 3, dtype='f')
+        cont_affine_bias = randn(cont_criteria_amount * 3, dtype='f')
 
         self.dropout_layers = []
 
@@ -65,7 +65,7 @@ class EssayEvalModel(LayerBase):
             self.grads += layer.grads
 
     def predict(self, x, train_flag=True):
-        xs, score_metrics = x
+        xs, measures = x
 
         embed_xs = self.time_embedding_layer.forward(xs)
         embed_xs = self.dropout_layers[0].forward(embed_xs, train_flag)
@@ -73,16 +73,15 @@ class EssayEvalModel(LayerBase):
         self.time_lstm_layer.reset_state()
         hs = self.time_lstm_layer.forward(embed_xs)
         hs = self.dropout_layers[1].forward(hs, train_flag)
-        # todo: hs 값을 평균내볼까?
-        rhs = hs.reshape(-1, self.time_size * self.lstm_hidden_size)
+        rhs = hs.reshape(-1, self.lstm_hidden_size)
 
-        metrics_repeated = []
-        for i in range(len(score_metrics)):
-            metrics_repeated.append(score_metrics[i][py.newaxis].repeat(rhs.shape[0], axis=0))
+        measures_repeated = []
+        for i in range(len(measures)):
+            measures_repeated.append(measures[i][py.newaxis].repeat(rhs.shape[0], axis=0))
 
-        exp_x = py.hstack((rhs, metrics_repeated[0]))
-        org_x = py.hstack((rhs, metrics_repeated[1]))
-        cont_x = py.hstack((rhs, metrics_repeated[2]))
+        exp_x = py.hstack((rhs, measures_repeated[0]))
+        org_x = py.hstack((rhs, measures_repeated[1]))
+        cont_x = py.hstack((rhs, measures_repeated[2]))
 
         exp_scores = self.exp_affine_layer.forward(exp_x).mean(axis=0)
         org_scores = self.org_affine_layer.forward(org_x).mean(axis=0)
@@ -142,7 +141,7 @@ class EssayEvalModel(LayerBase):
 
             exp_weight, org_weight, cont_weight = data['weight']['exp'], data['weight']['org'], data['weight']['cont']
             # 대분류 가중치를 하위의 소분류 가중치에 곱한다.
-            score_metrics = [exp_weight['exp'] * py.array([exp_weight['exp_grammar'], exp_weight['exp_vocab'], exp_weight['exp_style'], data['corr_count'] * exp_weight['exp_grammar']]),  # 문법 점수 계산에 교정 횟수를 포함
+            measures = [exp_weight['exp'] * py.array([exp_weight['exp_grammar'], exp_weight['exp_vocab'], exp_weight['exp_style'], data['corr_count'] * exp_weight['exp_grammar']]),  # 문법 점수 계산에 교정 횟수를 포함
                              org_weight['org'] * py.array([org_weight['org_paragraph'], org_weight['org_essay'], org_weight['org_coherence'], org_weight['org_quantity']]),
                              cont_weight['con'] * py.array([cont_weight['con_clearance'], cont_weight['con_novelty'], cont_weight['con_prompt'], cont_weight['con_description']])]
 
@@ -150,7 +149,7 @@ class EssayEvalModel(LayerBase):
             t = py.array(t)
             t_list.append(t)
 
-            x = (xs, score_metrics)
+            x = (xs, measures)
             x_list.append(x)
 
         if save_pickle:
