@@ -17,8 +17,8 @@ if __name__ == '__main__':
             corpus = py.array(corpus)
 
     print('Creating Context and targets...')
-    train_context, train_target = create_context_and_target(corpus[:1000000])
-    test_context, test_target = create_context_and_target(test_corpus[:10000])
+    train_context, train_target = create_context_and_target(corpus[1000000:2000000])
+    test_context, test_target = create_context_and_target(test_corpus[10000:20000])
 
     # word2vec 설정
     hidden_size = 50
