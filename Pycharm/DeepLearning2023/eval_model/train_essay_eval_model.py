@@ -16,9 +16,9 @@ if __name__ == '__main__':
 
     train_data_list = get_processed_essay_data(load_test_data=False, word_to_id=word_to_id, load_pickle=True)
 
-    do_fitting = False
-    load_saved_param = True
-    save_param = False
+    do_fitting = False  # 학습을 수행할 지
+    load_saved_param = True  # 모델의 저장된 매개변수(가중치)를 불러올 지
+    save_param = False  # 학습 후 매개변수를 저장할 지
 
     vocab_size = len(id_to_word)
     wordvec_size = 100

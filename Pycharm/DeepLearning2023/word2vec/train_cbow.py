@@ -29,16 +29,16 @@ if __name__ == '__main__':
     # 트레이너 설정
     max_epoch = 5
     batch_size = 10000
-    do_fitting = False
-    continue_from_last_fit = True
-    save_params = False
+    do_fitting = False  # 학습을 수행할 지
+    load_saved_params = True  # 모델의 저장된 매개변수(가중치)를 불러올 지
+    save_params = False  # 학습 후 매개변수를 저장할 지
 
     print('Creating model...')
     model = CBowModel(corpus, vocab_size, hidden_size, sample_size, weight_in, weight_out)
     optimizer = AdamOptimizer(learning_rate)
     trainer = Trainer(model, optimizer)
 
-    if continue_from_last_fit or not do_fitting:
+    if load_saved_params or not do_fitting:
         print('Loading params...')
         model.load_params()
 
