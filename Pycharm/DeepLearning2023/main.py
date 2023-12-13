@@ -27,9 +27,9 @@ if __name__ == '__main__':
     time_size = 80
 
     train_data_start = 0
-    train_data_size = -1
+    train_data_size = 10000
     test_data_size = 1000
-    max_epoch = 5
+    max_epoch = 2
 
     print('Creating model...')
     eval_model = EssayEvalModel(vocab_size, wordvec_size, lstm_hidden_size, time_size, embed_weight=embed_weight)
@@ -43,6 +43,7 @@ if __name__ == '__main__':
     if do_fitting:
         print('Loading train data...')
         x_list, t_list = EssayEvalModel.get_x_t_list_from_processed_data(train_data_list[train_data_start: train_data_start + train_data_size], time_size=time_size, load_pickle=False, save_pickle=True)
+        print('Start fitting...')
         trainer.fit(x_list, t_list,
                     max_epoch=max_epoch)
         trainer.plot()

@@ -8,7 +8,7 @@ from lang_model.time_embedding_layer import TimeEmbeddingLayer
 import math
 
 
-class EssayEvalModel(LayerBase):
+class EssayEvalModel2(LayerBase):
 
     def __init__(self, vocab_size, wordvec_size=100, lstm_hidden_size=30, time_size=50, dropout_rate=0.5, embed_weight=None):
         super().__init__()
@@ -30,7 +30,7 @@ class EssayEvalModel(LayerBase):
         lstm_weight_h = py.random.randn(lstm_hidden_size, 4 * lstm_hidden_size, dtype='f') / py.sqrt(lstm_hidden_size)
         lstm_bias = py.zeros(4 * lstm_hidden_size, dtype='f')
 
-        affine_input_size = time_size * lstm_hidden_size + 4
+        affine_input_size = lstm_hidden_size + 4
         exp_criteria_amount, org_criteria_amount, cont_criteria_amount = 3, 4, 4
 
         exp_affine_weight = randn(affine_input_size, exp_criteria_amount * 3, dtype='f')
@@ -73,7 +73,7 @@ class EssayEvalModel(LayerBase):
         self.time_lstm_layer.reset_state()
         hs = self.time_lstm_layer.forward(embed_xs)
         hs = self.dropout_layers[1].forward(hs, train_flag)
-        rhs = hs.reshape(-1, self.time_size * self.lstm_hidden_size)
+        rhs = hs.reshape(-1, self.lstm_hidden_size)
 
         measures_repeated = []
         for i in range(len(measures)):
