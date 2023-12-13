@@ -1,5 +1,5 @@
 from eval_model.essay_eval_model import EssayEvalModel
-from common.utils import create_essay_corpus_and_dict, get_processed_essay_data, load_data
+from common.utils import py, create_essay_corpus_and_dict, get_processed_essay_data, load_data
 from common.trainer import EssayEvalModelTrainer
 from common.adam_optimizer import AdamOptimizer
 import random
@@ -81,4 +81,4 @@ if __name__ == '__main__':
         total_diff += prediction - t
 
     print('[평균 오차]\n', (total_diff / predict_count))
-    print('[평균 오차 단일값] %.2f\n' % (total_diff / predict_count).mean())
+    print('[오차 절대값의 전체 평균] %.2f\n' % py.abs(total_diff / predict_count).mean())
