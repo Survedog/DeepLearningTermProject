@@ -82,3 +82,4 @@ if __name__ == '__main__':
 
     print('[평균 오차]\n', (total_diff / predict_count))
     print('[오차 절대값의 전체 평균] %.2f\n' % py.abs(total_diff / predict_count).mean())
+    print('[오차 절대값 합계] %.2f\n' % py.abs(total_diff / predict_count).sum())
