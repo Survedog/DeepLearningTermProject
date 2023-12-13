@@ -13,7 +13,6 @@ class AdamOptimizer(OptimizerBase):
         self.beta2 = beta2
         self.timestep = 0
 
-    # todo: params, grads 중복 제거해야 하는지 확인
     def update(self, params, grads, epsilon=1e-8):
         if not self.m:
             for param in params:
