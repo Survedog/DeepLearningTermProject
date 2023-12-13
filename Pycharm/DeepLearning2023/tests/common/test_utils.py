@@ -228,6 +228,21 @@ class UtilsTests(unittest.TestCase):
         for word_id, word in id_to_word.items():
             self.assertEqual(word_id, word_to_id[word])
 
+    def test_create_test_essay_corpus(self):
+        _, id_to_word, word_to_id = create_essay_corpus_and_dict(load_pickle=True, save_pickle=False, batch_size=100)
+        test_corpus = create_test_essay_corpus(word_to_id, load_pickle=False, save_pickle=False)
+
+        if '<UNK>' not in word_to_id:
+            unknown_id = len(id_to_word)
+            word_to_id['<UNK>'] = unknown_id
+            id_to_word[unknown_id] = '<UNK>'
+
+        diff = py.setdiff1d(test_corpus, py.array(list(id_to_word.keys())))
+        self.assertTrue(len(diff) == 0)
+
+        for word_id, word in id_to_word.items():
+            self.assertEqual(word_id, word_to_id[word])
+
     def test_text_to_ids(self):
         text_list = ['안녕하세요, 만나서 반갑습니다.', '그러면 연락 기다리고 있겠습니다.']
         corpus, id_to_word, word_to_id = create_corpus_and_dict(text_list)

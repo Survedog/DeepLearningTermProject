@@ -174,7 +174,8 @@ def create_test_essay_corpus(word_to_id, load_pickle=True, save_pickle=True):
             return data
 
     test_essay_data_list = load_essay_data_list(load_test_data=True, load_pickle=True)
-    test_corpus = text_to_ids(test_essay_data_list, word_to_id)
+    text_list = get_joined_paragraph_text_list(test_essay_data_list)
+    test_corpus = text_to_ids(text_list, word_to_id)
 
     if save_pickle:
         save_data(pickle_name, test_corpus)
@@ -198,7 +199,8 @@ def get_joined_paragraph_text_list(essay_data_list, batch_size=100):
                 text_list.append(''.join(text_batch[:batch_size]))
                 text_batch = text_batch[batch_size:]
 
-    text_list.append(''.join(text_batch))
+    return text_list
+
 
 def text_to_ids(text_list, word_to_id):
     word_ids = []
@@ -216,6 +218,7 @@ def text_to_ids(text_list, word_to_id):
             word_ids.append(word_to_id.get(word, unknown_token_id))
 
     return py.array(word_ids)
+
 
 def get_processed_essay_data(load_test_data, word_to_id, load_pickle=False, max_count=None, shuffle=False):
     pickle_name = 'processed_essay_data_' + ('test.p' if load_test_data else 'train.p')
