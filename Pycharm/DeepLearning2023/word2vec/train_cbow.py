@@ -57,10 +57,10 @@ if __name__ == '__main__':
             model.save_params()
 
     # 평가
-    test_size = 1000
+    test_size = 10000
     test_corpus = create_test_essay_corpus(word_to_id, load_pickle=True, save_pickle=True)
-    context, target = create_context_and_target(test_corpus[:test_size])
 
+    context, target = create_context_and_target(test_corpus[:test_size])
     test_loss = model.forward(context, target).mean()
     print('Test Loss: %.2f' % test_loss)
 
